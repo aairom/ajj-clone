@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asnières Jujitsu - Club de Jujitsu Brésilien</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <div class="logo">
+                    <img src="_images/cropped-AJJ_Original-2024_vectorise.png" alt="Asnières Jujitsu Logo">
+                    <h1>Asnières Jujitsu</h1>
+                </div>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="#accueil" class="nav-link active">Accueil</a></li>
+                    <li><a href="#actualites" class="nav-link">Actualités</a></li>
+                    <li><a href="#club" class="nav-link">Le Club</a></li>
+                    <li><a href="#horaires" class="nav-link">Horaires</a></li>
+                    <li><a href="#calendrier" class="nav-link">Calendrier</a></li>
+                    <li><a href="#tarifs" class="nav-link">Tarifs</a></li>
+                    <li><a href="#contact" class="nav-link">Contact</a></li>
+                    <li><a href="admin/login.html" class="nav-link admin-link"><i class="fas fa-lock"></i></a></li>
+                </ul>
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="hero">
+        <div class="hero-content">
+            <h2>Bienvenue au Club de Jujitsu Brésilien d'Asnières</h2>
+            <p>Découvrez l'art martial brésilien dans une ambiance conviviale</p>
+            <a href="#contact" class="btn btn-primary">Rejoignez-nous</a>
+        </div>
+    </section>
+
+    <!-- Actualités Section -->
+    <section id="actualites" class="section">
+        <div class="container">
+            <h2 class="section-title">Actualités</h2>
+            <div id="newsContainer" class="news-grid">
+                <!-- News items will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Le Club Section -->
+    <section id="club" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Le Club</h2>
+            <div class="club-content">
+                <div class="club-text">
+                    <h3>Notre Histoire</h3>
+                    <p>Le club de Jujitsu Brésilien d'Asnières est un lieu d'apprentissage et de partage des techniques de combat au sol. Nous accueillons tous les niveaux, du débutant au compétiteur confirmé.</p>
+                    
+                    <h3>Notre Philosophie</h3>
+                    <p>Le Jujitsu Brésilien est un art martial qui privilégie la technique sur la force. Notre enseignement met l'accent sur le respect, la discipline et le dépassement de soi.</p>
+                    
+                    <h3>Nos Instructeurs</h3>
+                    <p>Notre équipe d'instructeurs qualifiés vous accompagne dans votre progression avec passion et professionnalisme.</p>
+                </div>
+                <div class="club-image">
+                    <img src="images/club-placeholder.jpg" alt="Club de Jujitsu" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22300%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EClub Image%3C/text%3E%3C/svg%3E'">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Horaires Section -->
+    <section id="horaires" class="section">
+        <div class="container">
+            <h2 class="section-title">Horaires des Cours</h2>
+            <div class="schedule-grid">
+                <div class="schedule-card">
+                    <h3>Mardi</h3>
+                    <div class="schedule-item">
+                        <span class="time">19h00 - 21h00</span>
+                        <span class="level">Tous niveaux (Adhérents JJ)</span>
+                    </div>
+                </div>
+                <div class="schedule-card">
+                    <h3>Jeudi</h3>
+                    <div class="schedule-item">
+                        <span class="time">19h00 - 21h00</span>
+                        <span class="level">Tous niveaux (Adhérents JJ)</span>
+                    </div>
+                </div>
+                <div class="schedule-card">
+                    <h3>Samedi</h3>
+                    <div class="schedule-item">
+                        <span class="time">09h00 - 10h30</span>
+                        <span class="level">Adhérents JJ & Remise en Forme</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calendrier Section -->
+    <section id="calendrier" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Calendrier des Événements</h2>
+            <div id="calendarContainer" class="calendar-container">
+                <!-- Calendar events will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Tarifs Section -->
+    <section id="tarifs" class="section">
+        <div class="container">
+            <h2 class="section-title">Tarifs</h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Cours d'Essai</h3>
+                    <div class="price">Gratuit</div>
+                    <ul>
+                        <li>1 séance découverte</li>
+                        <li>Prêt de kimono</li>
+                        <li>Sans engagement</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-secondary">Réserver</a>
+                </div>
+                <div class="pricing-card featured">
+                    <h3>Abonnement Annuel</h3>
+                    <div class="price">320€</div>
+                    <ul>
+                        <li>Accès illimité</li>
+                        <li>Tous les cours</li>
+                        <li>Licence incluse</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-primary">S'inscrire</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Remise en Forme</h3>
+                    <div class="price">180€</div>
+                    <ul>
+                        <li>Accès illimité</li>
+                        <li>Tous les cours</li>
+                        <li>3 mois</li>
+                    </ul>
+                    <a href="#contact" class="btn btn-secondary">S'inscrire</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section">
+        <div class="container">
+            <h2 class="section-title">Contact</h2>
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <h3>Informations</h3>
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div>
+                            <strong>Adresse</strong>
+                            <p>Gymnase Municipal<br>Asnières-sur-Seine, 92600</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div>
+                            <strong>Email</strong>
+                            <p>asnieresjujitsu@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <div>
+                            <strong>Téléphone</strong>
+                            <p>06.62.75.31.45 (Solofo)</p> 
+                            <p>06.07.74.89.87 (Alain)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <h3>Envoyez-nous un message</h3>
+                    <form id="contactForm">
+                        <input type="text" name="name" placeholder="Nom" required>
+                        <input type="email" name="email" placeholder="Email" required>
+                        <input type="text" name="subject" placeholder="Sujet" required>
+                        <textarea name="message" placeholder="Message" rows="5" required></textarea>
+                        <button type="submit" class="btn btn-primary">Envoyer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Asnières Jujitsu</h4>
+                    <p>Club de Jujitsu Brésilien</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liens Rapides</h4>
+                    <ul>
+                        <li><a href="#accueil">Accueil</a></li>
+                        <li><a href="#club">Le Club</a></li>
+                        <li><a href="#horaires">Horaires</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Suivez-nous</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Asnières Jujitsu. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Registration Modal -->
+    <div id="registrationModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Choisissez votre type d'inscription</h2>
+            <div class="modal-buttons">
+                <a href="https://tally.so/r/3NDbKQ" target="_blank" class="btn btn-primary modal-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Nouvelle Inscription
+                </a>
+                <a href="https://tally.so/r/mK56XA" target="_blank" class="btn btn-secondary modal-btn">
+                    <i class="fas fa-redo"></i>
+                    Réinscription
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

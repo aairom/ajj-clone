@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de bord - Administration</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="admin-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Admin Header -->
+        <header class="admin-header">
+            <div class="container">
+                <div class="admin-header-left">
+                    <img src="../_images/cropped-AJJ_Original-2024_vectorise.png" alt="Asnières Jujitsu Logo" class="admin-logo">
+                    <h1><i class="fas fa-tachometer-alt"></i> Tableau de bord</h1>
+                </div>
+                <nav class="admin-nav">
+                    <a href="../index.html" target="_blank">
+                        <i class="fas fa-external-link-alt"></i>
+                        Voir le site
+                    </a>
+                    <a href="#" id="logoutBtn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Déconnexion
+                    </a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Admin Content -->
+        <div class="admin-content">
+            <div class="container">
+                <!-- Success/Error Messages -->
+                <div id="successMessage" class="message success"></div>
+                <div id="errorMessage" class="message error"></div>
+
+                <!-- Tabs -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" data-tab="news">
+                        <i class="fas fa-newspaper"></i>
+                        Actualités
+                    </button>
+                    <button class="tab-btn" data-tab="calendar">
+                        <i class="fas fa-calendar"></i>
+                        Calendrier
+                    </button>
+                </div>
+
+                <!-- News Tab -->
+                <div id="newsTab" class="tab-content active">
+                    <div class="admin-card">
+                        <h3>
+                            <i class="fas fa-plus-circle"></i>
+                            Ajouter une actualité
+                        </h3>
+                        <form id="newsForm" class="admin-form">
+                            <input type="hidden" id="newsId" name="id">
+                            <div class="form-group">
+                                <label for="newsTitle">Titre *</label>
+                                <input type="text" id="newsTitle" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newsContent">Contenu *</label>
+                                <textarea id="newsContent" name="content" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="newsDate">Date *</label>
+                                <input type="date" id="newsDate" name="date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newsImage">URL de l'image (optionnel)</label>
+                                <input type="url" id="newsImage" name="image" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancelNewsBtn" class="btn btn-secondary" style="display: none;">
+                                    Annuler
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    <span id="newsSubmitText">Publier</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3>
+                            <i class="fas fa-list"></i>
+                            Liste des actualités
+                        </h3>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Titre</th>
+                                        <th>Contenu</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="newsTableBody">
+                                    <!-- News items will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calendar Tab -->
+                <div id="calendarTab" class="tab-content">
+                    <div class="admin-card">
+                        <h3>
+                            <i class="fas fa-plus-circle"></i>
+                            Ajouter un événement
+                        </h3>
+                        <form id="calendarForm" class="admin-form">
+                            <input type="hidden" id="eventId" name="id">
+                            <div class="form-group">
+                                <label for="eventTitle">Titre *</label>
+                                <input type="text" id="eventTitle" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="eventDescription">Description *</label>
+                                <textarea id="eventDescription" name="description" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="eventDate">Date *</label>
+                                <input type="date" id="eventDate" name="date" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancelEventBtn" class="btn btn-secondary" style="display: none;">
+                                    Annuler
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i>
+                                    <span id="eventSubmitText">Ajouter</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="admin-card">
+                        <h3>
+                            <i class="fas fa-list"></i>
+                            Liste des événements
+                        </h3>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Titre</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="calendarTableBody">
+                                    <!-- Calendar events will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-exclamation-triangle"></i> Confirmation</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <p>Êtes-vous sûr de vouloir supprimer cet élément ?</p>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Annuler</button>
+                <button class="btn btn-delete" id="confirmDeleteBtn">Supprimer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
