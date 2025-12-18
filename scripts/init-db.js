@@ -84,6 +84,25 @@ db.exec(`
 `);
 console.log('✓ Created calendar_events table');
 
+// Images table
+db.exec(`
+    CREATE TABLE IF NOT EXISTS images (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        filename TEXT NOT NULL,
+        original_name TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        size INTEGER NOT NULL,
+        path TEXT NOT NULL,
+        thumbnail_path TEXT,
+        alt_text TEXT,
+        category TEXT DEFAULT 'general',
+        uploaded_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (uploaded_by) REFERENCES users(id)
+    )
+`);
+console.log('✓ Created images table');
+
 // Create indexes for better performance
 db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
@@ -91,6 +110,8 @@ db.exec(`
     CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
     CREATE INDEX IF NOT EXISTS idx_news_date ON news(date);
     CREATE INDEX IF NOT EXISTS idx_calendar_date ON calendar_events(date);
+    CREATE INDEX IF NOT EXISTS idx_images_category ON images(category);
+    CREATE INDEX IF NOT EXISTS idx_images_uploaded_by ON images(uploaded_by);
 `);
 console.log('✓ Created indexes');
 

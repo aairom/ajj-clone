@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
 const calendarRoutes = require('./routes/calendar');
 const contactRoutes = require('./routes/contact');
+const imagesRoutes = require('./routes/images');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,11 +35,15 @@ app.use(limiter);
 // Serve static files
 app.use(express.static(path.join(__dirname)));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // API Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/news', newsRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/images', imagesRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

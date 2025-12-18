@@ -59,3 +59,7 @@ yarn.lock
 *.pid
 *.seed
 *.pid.lock
+
+# Uploaded files
+uploads/
+!uploads/.gitkeep
