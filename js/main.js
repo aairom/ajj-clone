@@ -182,17 +182,44 @@ function formatDate(dateString) {
 // Contact Form Handler
 const contactForm = document.getElementById('contactForm');
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        const submitButton = contactForm.querySelector('button[type="submit"]');
+        const originalButtonText = submitButton.textContent;
+        
+        // Disable button and show loading state
+        submitButton.disabled = true;
+        submitButton.textContent = 'Envoi en cours...';
         
         const formData = new FormData(contactForm);
         const data = Object.fromEntries(formData);
         
-        // In a real application, this would send data to a server
-        console.log('Contact form submitted:', data);
-        
-        alert('Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.');
-        contactForm.reset();
+        try {
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('✅ Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.');
+                contactForm.reset();
+            } else {
+                alert('❌ ' + (result.message || 'Erreur lors de l\'envoi du message.'));
+            }
+        } catch (error) {
+            console.error('Error sending contact form:', error);
+            alert('❌ Erreur lors de l\'envoi du message. Veuillez réessayer plus tard.');
+        } finally {
+            // Re-enable button
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+        }
     });
 }
 
