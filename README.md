@@ -15,57 +15,94 @@ Site web moderne pour le club de Jujitsu Brésilien d'Asnières, développé en 
 - **Design responsive** - Compatible mobile, tablette et desktop
 - **Navigation fluide** - Smooth scrolling et menu mobile
 
-### Panneau d'Administration
-- **Authentification sécurisée** - Accès protégé par login/mot de passe
+### Panneau d'Administration Sécurisé
+- **Authentification JWT** - Système d'authentification moderne avec tokens
+- **Base de données SQLite** - Stockage sécurisé des données
+- **API RESTful** - Backend Node.js/Express
 - **Gestion des actualités** - Créer, modifier et supprimer des articles
 - **Gestion du calendrier** - Ajouter et gérer les événements
 - **Interface intuitive** - Tableau de bord facile à utiliser
-- **Stockage local** - Données sauvegardées dans le navigateur
+- **Sécurité renforcée** - Hash bcrypt, rate limiting, protection CSRF
 
 ## 📁 Structure du Projet
 
 ```
 ajj-clone/
 ├── index.html              # Page principale
+├── server.js               # Serveur Express
+├── package.json            # Dépendances Node.js
+├── .env                    # Configuration (ne pas commiter)
+├── .env.example            # Template de configuration
 ├── css/
 │   └── style.css          # Styles du site
 ├── js/
 │   └── main.js            # JavaScript principal
 ├── admin/
 │   ├── login.html         # Page de connexion admin
-│   ├── login.js           # Logique de connexion
+│   ├── login.js           # Logique de connexion (API)
 │   ├── dashboard.html     # Tableau de bord admin
-│   ├── dashboard.js       # Logique du dashboard
+│   ├── dashboard.js       # Logique du dashboard (API)
 │   └── admin-style.css    # Styles de l'admin
+├── routes/
+│   ├── auth.js            # Routes d'authentification
+│   ├── news.js            # Routes actualités
+│   └── calendar.js        # Routes calendrier
+├── middleware/
+│   └── auth.js            # Middleware JWT
+├── scripts/
+│   └── init-db.js         # Initialisation base de données
+├── data/
+│   └── admin.db           # Base de données SQLite
 ├── images/                # Dossier pour les images
-├── data/                  # Dossier pour les données
-└── README.md             # Ce fichier
+├── SETUP.md               # Guide d'installation détaillé
+├── README-SECURE-LOGIN.md # Documentation système sécurisé
+└── README.md              # Ce fichier
 ```
 
 ## 🔧 Installation et Utilisation
 
-### Installation Simple
+### Prérequis
+- **Node.js** v18.x ou v20.x (LTS recommandé)
+- **npm** (inclus avec Node.js)
 
-1. **Téléchargez ou clonez le projet**
+⚠️ **Important:** Node.js v24+ n'est pas encore compatible avec better-sqlite3. Utilisez Node.js v20 LTS.
+
+### Installation
+
+1. **Clonez le projet**
    ```bash
    git clone [url-du-repo]
    cd ajj-clone
    ```
 
-2. **Ouvrez le site**
-   - Double-cliquez sur `index.html` pour ouvrir le site dans votre navigateur
-   - Ou utilisez un serveur local (recommandé) :
-     ```bash
-     # Avec Python 3
-     python -m http.server 8000
-     
-     # Avec Node.js (http-server)
-     npx http-server
-     ```
+2. **Installez les dépendances**
+   ```bash
+   npm install
+   ```
 
-3. **Accédez au site**
-   - Site public : `http://localhost:8000/index.html`
-   - Administration : `http://localhost:8000/admin/login.html`
+3. **Configurez l'environnement**
+   ```bash
+   cp .env.example .env
+   ```
+   Éditez `.env` et changez le `JWT_SECRET` (obligatoire en production)
+
+4. **Initialisez la base de données**
+   ```bash
+   npm run init-db
+   ```
+
+5. **Démarrez le serveur**
+   ```bash
+   npm start
+   ```
+   Ou en mode développement avec auto-reload:
+   ```bash
+   npm run dev
+   ```
+
+6. **Accédez au site**
+   - Site public : `http://localhost:3000/`
+   - Administration : `http://localhost:3000/admin/login.html`
 
 ### Identifiants par Défaut
 
@@ -139,41 +176,74 @@ Tous les textes sont modifiables directement dans `index.html`. Recherchez les s
 
 ## 🔒 Sécurité
 
+### Fonctionnalités de Sécurité Implémentées
+
+✅ **Authentification JWT** - Tokens sécurisés avec expiration
+✅ **Hash bcrypt** - Mots de passe hashés (10 rounds)
+✅ **Rate Limiting** - Protection contre les attaques par force brute
+✅ **SQL Injection** - Protection via prepared statements
+✅ **Base de données locale** - SQLite avec données chiffrées
+✅ **Variables d'environnement** - Configuration sécurisée via .env
+
 ### Pour un Environnement de Production
 
-**⚠️ IMPORTANT :** Ce système utilise le stockage local du navigateur et une authentification basique. Pour un site en production, vous devez :
+**⚠️ IMPORTANT :** Avant de déployer en production :
 
-1. **Implémenter un backend sécurisé**
-   - Utilisez PHP, Node.js, Python, etc.
-   - Stockez les données dans une base de données (MySQL, PostgreSQL, MongoDB)
-   - Implémentez une vraie authentification avec hash de mot de passe
+1. **Changez le JWT_SECRET**
+   ```bash
+   # Générez un secret fort
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+   Mettez à jour `.env` avec le secret généré
 
-2. **Sécuriser l'authentification**
-   - Utilisez des tokens JWT ou des sessions serveur
-   - Implémentez HTTPS
-   - Ajoutez une protection CSRF
+2. **Changez les identifiants par défaut**
+   - Connectez-vous immédiatement après l'installation
+   - Utilisez l'endpoint `/api/auth/change-password`
 
-3. **Protéger le dossier admin**
-   - Utilisez `.htaccess` (Apache) ou configuration nginx
-   - Ajoutez une authentification HTTP basique en plus
+3. **Configurez HTTPS**
+   - Utilisez un reverse proxy (nginx, Apache)
+   - Obtenez un certificat SSL (Let's Encrypt gratuit)
 
-4. **Sauvegarder les données**
-   - Mettez en place des backups réguliers
+4. **Sécurisez la base de données**
+   ```bash
+   chmod 600 data/admin.db
+   ```
+
+5. **Configurez les backups**
+   - Sauvegardez régulièrement `data/admin.db`
    - Utilisez un système de versioning
+
+6. **Mettez à jour NODE_ENV**
+   ```env
+   NODE_ENV=production
+   ```
 
 ## 🌐 Déploiement
 
-### Hébergement Statique (Version Actuelle)
-Vous pouvez héberger ce site sur :
-- **GitHub Pages** (gratuit)
-- **Netlify** (gratuit)
-- **Vercel** (gratuit)
-- **Firebase Hosting** (gratuit)
+### Hébergement avec Backend Node.js
 
-### Avec Backend (Recommandé pour Production)
-- **Hébergement partagé** avec PHP/MySQL
-- **VPS** (OVH, DigitalOcean, etc.)
-- **Services cloud** (AWS, Google Cloud, Azure)
+Le site nécessite maintenant un serveur Node.js. Options recommandées :
+
+- **VPS** (OVH, DigitalOcean, Linode)
+- **Services cloud** (AWS EC2, Google Cloud, Azure)
+- **PaaS** (Heroku, Railway, Render)
+- **Serveur dédié**
+
+### Configuration Serveur
+
+1. Installez Node.js v20 LTS
+2. Clonez le projet
+3. Configurez `.env` avec des valeurs de production
+4. Installez les dépendances: `npm install`
+5. Initialisez la base: `npm run init-db`
+6. Utilisez PM2 pour la gestion du processus:
+   ```bash
+   npm install -g pm2
+   pm2 start server.js --name ajj-admin
+   pm2 save
+   pm2 startup
+   ```
+7. Configurez nginx comme reverse proxy
 
 ## 📱 Compatibilité
 
@@ -185,11 +255,20 @@ Vous pouvez héberger ce site sur :
 
 ## 🛠️ Technologies Utilisées
 
+### Frontend
 - **HTML5** - Structure
 - **CSS3** - Styles et animations
 - **JavaScript (Vanilla)** - Interactivité
 - **Font Awesome** - Icônes
-- **LocalStorage API** - Stockage des données
+
+### Backend
+- **Node.js** - Runtime JavaScript
+- **Express.js** - Framework web
+- **SQLite** (better-sqlite3) - Base de données
+- **bcrypt** - Hash de mots de passe
+- **jsonwebtoken** - Authentification JWT
+- **express-rate-limit** - Protection rate limiting
+- **dotenv** - Gestion variables d'environnement
 
 ## 📄 Licence
 
@@ -202,10 +281,16 @@ Pour toute question ou problème :
 2. Vérifiez la console du navigateur (F12) pour les erreurs
 3. Contactez le développeur
 
-## 🔄 Mises à Jour Futures
+## 🔄 Mises à Jour Récentes
 
-Fonctionnalités suggérées :
-- [ ] Backend avec base de données
+### Version 2.0 (Décembre 2024)
+- ✅ Backend Node.js/Express implémenté
+- ✅ Base de données SQLite
+- ✅ Authentification JWT sécurisée
+- ✅ API RESTful complète
+- ✅ Rate limiting et sécurité renforcée
+
+### Fonctionnalités Futures Suggérées
 - [ ] Upload d'images directement depuis l'admin
 - [ ] Gestion des membres
 - [ ] Système de réservation de cours
@@ -213,11 +298,34 @@ Fonctionnalités suggérées :
 - [ ] Galerie photos
 - [ ] Blog
 - [ ] Multilingue (FR/EN)
+- [ ] Notifications push
 
 ## 📞 Contact Développeur
 
 Pour des modifications ou améliorations, contactez le développeur du site.
 
+## 📚 Documentation Complémentaire
+
+- **[SETUP.md](SETUP.md)** - Guide d'installation détaillé
+- **[README-SECURE-LOGIN.md](README-SECURE-LOGIN.md)** - Documentation du système d'authentification
+- **[.env.example](.env.example)** - Template de configuration
+
+## 🐛 Dépannage
+
+### Problèmes d'installation
+
+**Erreur avec better-sqlite3:**
+- Assurez-vous d'utiliser Node.js v18 ou v20 (pas v24+)
+- Installez les outils de build: `xcode-select --install` (macOS)
+
+**Le serveur ne démarre pas:**
+- Vérifiez que le port 3000 n'est pas utilisé
+- Vérifiez que `.env` existe et contient JWT_SECRET
+
+**Erreurs de base de données:**
+- Supprimez `data/admin.db` et relancez `npm run init-db`
+- Vérifiez les permissions du dossier `data/`
+
 ---
 
-**Dernière mise à jour :** Décembre 2024
+**Dernière mise à jour :** Décembre 2024 - Version 2.0 (Système sécurisé avec backend)
