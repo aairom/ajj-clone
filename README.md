@@ -21,8 +21,17 @@ Site web moderne pour le club de Jujitsu Brésilien d'Asnières, développé en 
 - **API RESTful** - Backend Node.js/Express
 - **Gestion des actualités** - Créer, modifier et supprimer des articles
 - **Gestion du calendrier** - Ajouter et gérer les événements
+- **📸 Upload d'images** - Téléchargement direct avec génération automatique de miniatures ✅
 - **Interface intuitive** - Tableau de bord facile à utiliser
 - **Sécurité renforcée** - Hash bcrypt, rate limiting, protection CSRF
+
+### 🎯 Fonctionnalités Avancées (En Développement)
+- ✅ **Upload d'images** - Système complet de gestion d'images
+- ⏳ **Réservation de cours** - Système de réservation en ligne
+- ⏳ **Newsletter** - Gestion des abonnés et campagnes email
+- ⏳ **Galerie photos** - Albums et galeries d'images
+- ⏳ **Notifications push** - Notifications en temps réel
+- ⏳ **Blog** - Système de blog complet avec commentaires
 
 ## 📁 Structure du Projet
 
@@ -316,6 +325,8 @@ kubectl exec -n ajj-jujitsu $POD -- npm run init-db
 - **[DOCKER-DEPLOYMENT.md](DOCKER-DEPLOYMENT.md)** - Guide complet Docker & Kubernetes
 - **[SETUP.md](SETUP.md)** - Installation et configuration détaillée
 - **[EMAIL-SETUP.md](EMAIL-SETUP.md)** - Configuration email pour formulaire de contact
+- **[IMAGE-UPLOAD-GUIDE.md](IMAGE-UPLOAD-GUIDE.md)** - Guide système d'upload d'images
+- **[FEATURES-ROADMAP.md](FEATURES-ROADMAP.md)** - Feuille de route des fonctionnalités
 
 ## 📱 Compatibilité
 
@@ -341,6 +352,10 @@ kubectl exec -n ajj-jujitsu $POD -- npm run init-db
 - **jsonwebtoken** - Authentification JWT
 - **express-rate-limit** - Protection rate limiting
 - **dotenv** - Gestion variables d'environnement
+- **nodemailer** - Envoi d'emails
+- **multer** - Upload de fichiers
+- **sharp** - Traitement d'images
+- **uuid** - Génération d'identifiants uniques
 
 ## 📄 Licence
 
