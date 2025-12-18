@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ajj-app
+  namespace: ajj-jujitsu
+  labels:
+    app: ajj-app
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: ajj-app
+  template:
+    metadata:
+      labels:
+        app: ajj-app
+    spec:
+      containers:
+      - name: ajj-app
+        image: ajj-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ajj-config
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ajj-config
+              key: PORT
+        - name: DB_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: ajj-config
+              key: DB_PATH
+        - name: JWT_EXPIRES_IN
+          valueFrom:
+            configMapKeyRef:
+              name: ajj-config
+              key: JWT_EXPIRES_IN
+        - name: DEFAULT_ADMIN_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: ajj-config
+              key: DEFAULT_ADMIN_USERNAME
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ajj-secrets
+              key: JWT_SECRET
+        - name: DEFAULT_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ajj-secrets
+              key: DEFAULT_ADMIN_PASSWORD
+        - name: EMAIL_USER
+          valueFrom:
+            secretKeyRef:
+              name: ajj-secrets
+              key: EMAIL_USER
+        - name: EMAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ajj-secrets
+              key: EMAIL_PASSWORD
+        volumeMounts:
+        - name: sqlite-storage
+          mountPath: /app/data
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: sqlite-storage
+        persistentVolumeClaim:
+          claimName: ajj-sqlite-pvc
+      restartPolicy: Always
+
+# Made with Bob

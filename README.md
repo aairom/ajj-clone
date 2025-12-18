@@ -220,16 +220,82 @@ Tous les textes sont modifiables directement dans `index.html`. Recherchez les s
 
 ## 🌐 Déploiement
 
-### Hébergement avec Backend Node.js
+### Options de Déploiement
 
-Le site nécessite maintenant un serveur Node.js. Options recommandées :
+Le site peut être déployé de plusieurs façons :
 
-- **VPS** (OVH, DigitalOcean, Linode)
-- **Services cloud** (AWS EC2, Google Cloud, Azure)
-- **PaaS** (Heroku, Railway, Render)
-- **Serveur dédié**
+1. **🐳 Docker** (Recommandé) - Déploiement conteneurisé
+2. **☸️ Kubernetes** - Orchestration pour production
+3. **🖥️ Serveur Traditionnel** - Installation directe
 
-### Configuration Serveur
+### 🐳 Déploiement Docker
+
+**Quick Start avec Docker Compose:**
+
+```bash
+# Cloner et configurer
+git clone <repository-url>
+cd ajj-clone
+cp .env.example .env
+# Éditer .env avec vos valeurs
+
+# Démarrer l'application
+docker-compose up -d
+
+# Initialiser la base de données
+docker-compose exec app npm run init-db
+```
+
+**Accès:** http://localhost:3000
+
+**Commandes utiles:**
+```bash
+# Voir les logs
+docker-compose logs -f app
+
+# Arrêter
+docker-compose down
+
+# Rebuild après modifications
+docker-compose up -d --build
+```
+
+### ☸️ Déploiement Kubernetes
+
+**Prérequis:** Cluster Kubernetes et kubectl configuré
+
+```bash
+# Build et push l'image
+docker build -t your-registry/ajj-app:v1.0.0 .
+docker push your-registry/ajj-app:v1.0.0
+
+# Déployer avec kubectl
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/secret.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/persistentvolume.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+
+# Ou avec Kustomize
+kubectl apply -k k8s/
+
+# Initialiser la base
+POD=$(kubectl get pods -n ajj-jujitsu -l app=ajj-app -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n ajj-jujitsu $POD -- npm run init-db
+```
+
+**Fonctionnalités Kubernetes:**
+- ✅ Auto-scaling (HPA) - 2 à 10 pods
+- ✅ Health checks et readiness probes
+- ✅ Rolling updates sans downtime
+- ✅ Persistent storage pour SQLite
+- ✅ Ingress avec TLS/SSL
+
+### 🖥️ Déploiement Serveur Traditionnel
+
+**Pour VPS/Cloud (OVH, DigitalOcean, AWS EC2, etc.):**
 
 1. Installez Node.js v20 LTS
 2. Clonez le projet
@@ -244,6 +310,12 @@ Le site nécessite maintenant un serveur Node.js. Options recommandées :
    pm2 startup
    ```
 7. Configurez nginx comme reverse proxy
+
+### 📚 Documentation Complète
+
+- **[DOCKER-DEPLOYMENT.md](DOCKER-DEPLOYMENT.md)** - Guide complet Docker & Kubernetes
+- **[SETUP.md](SETUP.md)** - Installation et configuration détaillée
+- **[EMAIL-SETUP.md](EMAIL-SETUP.md)** - Configuration email pour formulaire de contact
 
 ## 📱 Compatibilité
 

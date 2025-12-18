@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ajj-app-ingress
+  namespace: ajj-jujitsu
+  labels:
+    app: ajj-app
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ajj.example.com
+    secretName: ajj-tls-secret
+  rules:
+  - host: ajj.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ajj-app-service
+            port:
+              number: 80
+
+# Made with Bob

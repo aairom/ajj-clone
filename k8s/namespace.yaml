@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ajj-jujitsu
+  labels:
+    name: ajj-jujitsu
+    app: asnières-jujitsu
+
+# Made with Bob
