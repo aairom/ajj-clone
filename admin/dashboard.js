@@ -1,26 +1,65 @@
-// Admin Dashboard JavaScript
+// Admin Dashboard JavaScript - Secure Backend Integration
+
+const API_URL = 'http://localhost:3000/api';
 
 // Check authentication
-if (!sessionStorage.getItem('adminLoggedIn')) {
+const authToken = localStorage.getItem('authToken');
+if (!authToken) {
     window.location.href = 'login.html';
 }
 
+// Get auth headers
+function getAuthHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+    };
+}
+
+// Verify token on page load
+async function verifyAuth() {
+    try {
+        const response = await fetch(`${API_URL}/auth/verify`, {
+            headers: getAuthHeaders()
+        });
+        
+        if (!response.ok) {
+            throw new Error('Invalid token');
+        }
+    } catch (error) {
+        console.error('Auth verification failed:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = 'login.html';
+    }
+}
+
+verifyAuth();
+
 // Logout handler
-document.getElementById('logoutBtn').addEventListener('click', (e) => {
+document.getElementById('logoutBtn').addEventListener('click', async (e) => {
     e.preventDefault();
-    sessionStorage.removeItem('adminLoggedIn');
-    sessionStorage.removeItem('adminUsername');
-    window.location.href = 'login.html';
+    
+    try {
+        await fetch(`${API_URL}/auth/logout`, {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+    } catch (error) {
+        console.error('Logout error:', error);
+    } finally {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('adminUser');
+        window.location.href = 'login.html';
+    }
 });
 
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        // Remove active class from all tabs
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
         
-        // Add active class to clicked tab
         btn.classList.add('active');
         const tabId = btn.dataset.tab + 'Tab';
         document.getElementById(tabId).classList.add('active');
@@ -49,90 +88,110 @@ function formatDate(dateString) {
 let editingNewsId = null;
 
 // Load news into table
-function loadNewsTable() {
-    const news = JSON.parse(localStorage.getItem('news') || '[]');
+async function loadNewsTable() {
     const tbody = document.getElementById('newsTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Chargement...</td></tr>';
     
-    if (news.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Aucune actualité</td></tr>';
-        return;
+    try {
+        const response = await fetch(`${API_URL}/news`);
+        const data = await response.json();
+        
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Aucune actualité</td></tr>';
+            return;
+        }
+        
+        const news = data.data;
+        news.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        tbody.innerHTML = news.map(item => `
+            <tr>
+                <td>${formatDate(item.date)}</td>
+                <td><strong>${item.title}</strong></td>
+                <td>${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-small btn-edit" onclick="editNews(${item.id})">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn btn-small btn-delete" onclick="deleteNews(${item.id})">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load news error:', error);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #f44336;">Erreur de chargement</td></tr>';
     }
-    
-    // Sort by date (newest first)
-    news.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    tbody.innerHTML = news.map(item => `
-        <tr>
-            <td>${formatDate(item.date)}</td>
-            <td><strong>${item.title}</strong></td>
-            <td>${item.content.substring(0, 100)}${item.content.length > 100 ? '...' : ''}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-small btn-edit" onclick="editNews(${item.id})">
-                        <i class="fas fa-edit"></i> Modifier
-                    </button>
-                    <button class="btn btn-small btn-delete" onclick="deleteNews(${item.id})">
-                        <i class="fas fa-trash"></i> Supprimer
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
 }
 
 // News form submit
-document.getElementById('newsForm').addEventListener('submit', (e) => {
+document.getElementById('newsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = new FormData(e.target);
     const newsData = {
-        id: editingNewsId || Date.now(),
         title: formData.get('title'),
         content: formData.get('content'),
         date: formData.get('date'),
         image: formData.get('image') || ''
     };
     
-    let news = JSON.parse(localStorage.getItem('news') || '[]');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
     
-    if (editingNewsId) {
-        // Update existing news
-        news = news.map(item => item.id === editingNewsId ? newsData : item);
-        showMessage('Actualité mise à jour avec succès');
-    } else {
-        // Add new news
-        news.push(newsData);
-        showMessage('Actualité publiée avec succès');
+    try {
+        const url = editingNewsId ? `${API_URL}/news/${editingNewsId}` : `${API_URL}/news`;
+        const method = editingNewsId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: getAuthHeaders(),
+            body: JSON.stringify(newsData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            showMessage(data.message);
+            e.target.reset();
+            editingNewsId = null;
+            document.getElementById('newsSubmitText').textContent = 'Publier';
+            document.getElementById('cancelNewsBtn').style.display = 'none';
+            loadNewsTable();
+        } else {
+            showMessage(data.error || 'Erreur lors de l\'enregistrement', 'error');
+        }
+    } catch (error) {
+        console.error('Save news error:', error);
+        showMessage('Erreur de connexion au serveur', 'error');
+    } finally {
+        submitBtn.disabled = false;
     }
-    
-    localStorage.setItem('news', JSON.stringify(news));
-    
-    // Reset form
-    e.target.reset();
-    editingNewsId = null;
-    document.getElementById('newsSubmitText').textContent = 'Publier';
-    document.getElementById('cancelNewsBtn').style.display = 'none';
-    
-    // Reload table
-    loadNewsTable();
 });
 
 // Edit news
-function editNews(id) {
-    const news = JSON.parse(localStorage.getItem('news') || '[]');
-    const item = news.find(n => n.id === id);
-    
-    if (item) {
-        editingNewsId = id;
-        document.getElementById('newsTitle').value = item.title;
-        document.getElementById('newsContent').value = item.content;
-        document.getElementById('newsDate').value = item.date;
-        document.getElementById('newsImage').value = item.image || '';
-        document.getElementById('newsSubmitText').textContent = 'Mettre à jour';
-        document.getElementById('cancelNewsBtn').style.display = 'inline-block';
+async function editNews(id) {
+    try {
+        const response = await fetch(`${API_URL}/news/${id}`);
+        const data = await response.json();
         
-        // Scroll to form
-        document.getElementById('newsForm').scrollIntoView({ behavior: 'smooth' });
+        if (data.success && data.data) {
+            const item = data.data;
+            editingNewsId = id;
+            document.getElementById('newsTitle').value = item.title;
+            document.getElementById('newsContent').value = item.content;
+            document.getElementById('newsDate').value = item.date;
+            document.getElementById('newsImage').value = item.image || '';
+            document.getElementById('newsSubmitText').textContent = 'Mettre à jour';
+            document.getElementById('cancelNewsBtn').style.display = 'inline-block';
+            document.getElementById('newsForm').scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (error) {
+        console.error('Edit news error:', error);
+        showMessage('Erreur lors du chargement', 'error');
     }
 }
 
@@ -146,12 +205,25 @@ document.getElementById('cancelNewsBtn').addEventListener('click', () => {
 
 // Delete news
 function deleteNews(id) {
-    showDeleteModal(() => {
-        let news = JSON.parse(localStorage.getItem('news') || '[]');
-        news = news.filter(item => item.id !== id);
-        localStorage.setItem('news', JSON.stringify(news));
-        loadNewsTable();
-        showMessage('Actualité supprimée avec succès');
+    showDeleteModal(async () => {
+        try {
+            const response = await fetch(`${API_URL}/news/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                showMessage(data.message);
+                loadNewsTable();
+            } else {
+                showMessage(data.error || 'Erreur lors de la suppression', 'error');
+            }
+        } catch (error) {
+            console.error('Delete news error:', error);
+            showMessage('Erreur de connexion au serveur', 'error');
+        }
     });
 }
 
@@ -160,88 +232,108 @@ function deleteNews(id) {
 let editingEventId = null;
 
 // Load calendar events into table
-function loadCalendarTable() {
-    const events = JSON.parse(localStorage.getItem('calendar') || '[]');
+async function loadCalendarTable() {
     const tbody = document.getElementById('calendarTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Chargement...</td></tr>';
     
-    if (events.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Aucun événement</td></tr>';
-        return;
+    try {
+        const response = await fetch(`${API_URL}/calendar`);
+        const data = await response.json();
+        
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Aucun événement</td></tr>';
+            return;
+        }
+        
+        const events = data.data;
+        events.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        tbody.innerHTML = events.map(event => `
+            <tr>
+                <td>${formatDate(event.date)}</td>
+                <td><strong>${event.title}</strong></td>
+                <td>${event.description.substring(0, 100)}${event.description.length > 100 ? '...' : ''}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-small btn-edit" onclick="editEvent(${event.id})">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn btn-small btn-delete" onclick="deleteEvent(${event.id})">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load calendar error:', error);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #f44336;">Erreur de chargement</td></tr>';
     }
-    
-    // Sort by date (nearest first)
-    events.sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    tbody.innerHTML = events.map(event => `
-        <tr>
-            <td>${formatDate(event.date)}</td>
-            <td><strong>${event.title}</strong></td>
-            <td>${event.description.substring(0, 100)}${event.description.length > 100 ? '...' : ''}</td>
-            <td>
-                <div class="action-buttons">
-                    <button class="btn btn-small btn-edit" onclick="editEvent(${event.id})">
-                        <i class="fas fa-edit"></i> Modifier
-                    </button>
-                    <button class="btn btn-small btn-delete" onclick="deleteEvent(${event.id})">
-                        <i class="fas fa-trash"></i> Supprimer
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
 }
 
 // Calendar form submit
-document.getElementById('calendarForm').addEventListener('submit', (e) => {
+document.getElementById('calendarForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const formData = new FormData(e.target);
     const eventData = {
-        id: editingEventId || Date.now(),
         title: formData.get('title'),
         description: formData.get('description'),
         date: formData.get('date')
     };
     
-    let events = JSON.parse(localStorage.getItem('calendar') || '[]');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
     
-    if (editingEventId) {
-        // Update existing event
-        events = events.map(item => item.id === editingEventId ? eventData : item);
-        showMessage('Événement mis à jour avec succès');
-    } else {
-        // Add new event
-        events.push(eventData);
-        showMessage('Événement ajouté avec succès');
+    try {
+        const url = editingEventId ? `${API_URL}/calendar/${editingEventId}` : `${API_URL}/calendar`;
+        const method = editingEventId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method,
+            headers: getAuthHeaders(),
+            body: JSON.stringify(eventData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            showMessage(data.message);
+            e.target.reset();
+            editingEventId = null;
+            document.getElementById('eventSubmitText').textContent = 'Ajouter';
+            document.getElementById('cancelEventBtn').style.display = 'none';
+            loadCalendarTable();
+        } else {
+            showMessage(data.error || 'Erreur lors de l\'enregistrement', 'error');
+        }
+    } catch (error) {
+        console.error('Save event error:', error);
+        showMessage('Erreur de connexion au serveur', 'error');
+    } finally {
+        submitBtn.disabled = false;
     }
-    
-    localStorage.setItem('calendar', JSON.stringify(events));
-    
-    // Reset form
-    e.target.reset();
-    editingEventId = null;
-    document.getElementById('eventSubmitText').textContent = 'Ajouter';
-    document.getElementById('cancelEventBtn').style.display = 'none';
-    
-    // Reload table
-    loadCalendarTable();
 });
 
 // Edit event
-function editEvent(id) {
-    const events = JSON.parse(localStorage.getItem('calendar') || '[]');
-    const event = events.find(e => e.id === id);
-    
-    if (event) {
-        editingEventId = id;
-        document.getElementById('eventTitle').value = event.title;
-        document.getElementById('eventDescription').value = event.description;
-        document.getElementById('eventDate').value = event.date;
-        document.getElementById('eventSubmitText').textContent = 'Mettre à jour';
-        document.getElementById('cancelEventBtn').style.display = 'inline-block';
+async function editEvent(id) {
+    try {
+        const response = await fetch(`${API_URL}/calendar/${id}`);
+        const data = await response.json();
         
-        // Scroll to form
-        document.getElementById('calendarForm').scrollIntoView({ behavior: 'smooth' });
+        if (data.success && data.data) {
+            const event = data.data;
+            editingEventId = id;
+            document.getElementById('eventTitle').value = event.title;
+            document.getElementById('eventDescription').value = event.description;
+            document.getElementById('eventDate').value = event.date;
+            document.getElementById('eventSubmitText').textContent = 'Mettre à jour';
+            document.getElementById('cancelEventBtn').style.display = 'inline-block';
+            document.getElementById('calendarForm').scrollIntoView({ behavior: 'smooth' });
+        }
+    } catch (error) {
+        console.error('Edit event error:', error);
+        showMessage('Erreur lors du chargement', 'error');
     }
 }
 
@@ -255,12 +347,25 @@ document.getElementById('cancelEventBtn').addEventListener('click', () => {
 
 // Delete event
 function deleteEvent(id) {
-    showDeleteModal(() => {
-        let events = JSON.parse(localStorage.getItem('calendar') || '[]');
-        events = events.filter(item => item.id !== id);
-        localStorage.setItem('calendar', JSON.stringify(events));
-        loadCalendarTable();
-        showMessage('Événement supprimé avec succès');
+    showDeleteModal(async () => {
+        try {
+            const response = await fetch(`${API_URL}/calendar/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                showMessage(data.message);
+                loadCalendarTable();
+            } else {
+                showMessage(data.error || 'Erreur lors de la suppression', 'error');
+            }
+        } catch (error) {
+            console.error('Delete event error:', error);
+            showMessage('Erreur de connexion au serveur', 'error');
+        }
     });
 }
 
@@ -285,7 +390,6 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
     closeDeleteModal();
 });
 
-// Close modal on outside click
 document.getElementById('deleteModal').addEventListener('click', (e) => {
     if (e.target.id === 'deleteModal') {
         closeDeleteModal();
@@ -294,12 +398,10 @@ document.getElementById('deleteModal').addEventListener('click', (e) => {
 
 // ==================== INITIALIZATION ====================
 
-// Set today's date as default for forms
 const today = new Date().toISOString().split('T')[0];
 document.getElementById('newsDate').value = today;
 document.getElementById('eventDate').value = today;
 
-// Load initial data
 loadNewsTable();
 loadCalendarTable();
 

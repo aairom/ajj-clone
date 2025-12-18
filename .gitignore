@@ -31,6 +31,19 @@ build/
 .env.local
 .env.*.local
 
+# Database files
+*.db
+*.db-shm
+*.db-wal
+data/*.db
+data/*.db-shm
+data/*.db-wal
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
+
 # Temporary files
 *.tmp
 *.temp
