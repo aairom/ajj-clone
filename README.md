@@ -1,6 +1,6 @@
 # Asnières Jujitsu - Site Web
 
-Site web moderne pour le club de Jujitsu Brésilien d'Asnières, développé en HTML, CSS et JavaScript avec un panneau d'administration intégré.
+Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé en HTML, CSS et JavaScript avec un panneau d'administration intégré.
 
 ## 🚀 Fonctionnalités
 
