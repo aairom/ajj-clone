@@ -445,7 +445,7 @@ Pour toute question ou problème :
 
 ## 🔄 Mises à Jour Récentes
 
-### Version 2.2 (Décembre 2024)
+### Version 2.2 (Décembre 2025)
 - ✅ **Éditeur WYSIWYG pour les actualités et événements**
   - Éditeur de texte riche avec Quill.js
   - Formatage avancé (gras, italique, titres, listes)
@@ -454,7 +454,7 @@ Pour toute question ou problème :
   - Prévisualisation en temps réel
   - Disponible pour actualités ET événements
 
-### Version 2.1 (Décembre 2024)
+### Version 2.1 (Décembre 2025)
 - ✅ **Système de gestion d'images complet**
   - Upload multiple d'images (jusqu'à 10 simultanément)
   - Génération automatique de miniatures
@@ -463,7 +463,7 @@ Pour toute question ou problème :
   - Copie d'URL facilitée
 - ✅ Interface admin améliorée avec onglet Images
 
-### Version 2.0 (Décembre 2024)
+### Version 2.0 (Décembre 2025)
 - ✅ Backend Node.js/Express implémenté
 - ✅ Base de données SQLite
 - ✅ Authentification JWT sécurisée
