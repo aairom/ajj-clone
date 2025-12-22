@@ -63,6 +63,11 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.add('active');
         const tabId = btn.dataset.tab + 'Tab';
         document.getElementById(tabId).classList.add('active');
+        
+        // Load images when Images tab is activated
+        if (btn.dataset.tab === 'images') {
+            loadImageGallery();
+        }
     });
 });
 
@@ -395,6 +400,188 @@ document.getElementById('deleteModal').addEventListener('click', (e) => {
         closeDeleteModal();
     }
 });
+
+// ==================== IMAGE MANAGEMENT ====================
+
+// Load images into gallery
+async function loadImageGallery(category = '') {
+    const gallery = document.getElementById('imageGallery');
+    gallery.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Chargement...</div>';
+    
+    try {
+        const url = category ? `${API_URL}/images?category=${category}` : `${API_URL}/images`;
+        const response = await fetch(url, {
+            headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        
+        if (!data.success || data.images.length === 0) {
+            gallery.innerHTML = '<div style="text-align: center; padding: 2rem; color: #999;">Aucune image</div>';
+            return;
+        }
+        
+        gallery.innerHTML = data.images.map(img => `
+            <div class="image-card" data-id="${img.id}">
+                <div class="image-thumbnail">
+                    <img src="${img.thumbnail_path}" alt="${img.alt_text || img.original_name}" loading="lazy">
+                </div>
+                <div class="image-info">
+                    <div class="image-name" title="${img.original_name}">${img.original_name}</div>
+                    <div class="image-meta">
+                        <span class="image-category">${img.category}</span>
+                        <span class="image-size">${formatFileSize(img.size)}</span>
+                    </div>
+                    <div class="image-actions">
+                        <button class="btn btn-small" onclick="copyImageUrl('${img.path}')" title="Copier l'URL">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="btn btn-small" onclick="viewImage('${img.path}')" title="Voir">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-small btn-delete" onclick="deleteImage(${img.id})" title="Supprimer">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Load images error:', error);
+        gallery.innerHTML = '<div style="text-align: center; padding: 2rem; color: #f44336;">Erreur de chargement</div>';
+    }
+}
+
+// Format file size
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Image upload form submit
+document.getElementById('imageUploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    const files = document.getElementById('imageFiles').files;
+    const category = document.getElementById('imageCategory').value;
+    
+    if (files.length === 0) {
+        showMessage('Veuillez sélectionner au moins une image', 'error');
+        return;
+    }
+    
+    // Add files to FormData
+    for (let i = 0; i < files.length; i++) {
+        formData.append('images', files[i]);
+    }
+    formData.append('category', category);
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const progressContainer = document.getElementById('uploadProgress');
+    const progressBar = document.getElementById('progressBar');
+    
+    submitBtn.disabled = true;
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressBar.textContent = '0%';
+    
+    try {
+        const xhr = new XMLHttpRequest();
+        
+        // Progress tracking
+        xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+                const percentComplete = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percentComplete + '%';
+                progressBar.textContent = percentComplete + '%';
+            }
+        });
+        
+        // Response handling
+        xhr.addEventListener('load', () => {
+            if (xhr.status === 200) {
+                const data = JSON.parse(xhr.responseText);
+                if (data.success) {
+                    showMessage(data.message);
+                    e.target.reset();
+                    loadImageGallery(document.getElementById('categoryFilter').value);
+                } else {
+                    showMessage(data.message || 'Erreur lors du téléchargement', 'error');
+                }
+            } else {
+                showMessage('Erreur lors du téléchargement', 'error');
+            }
+            submitBtn.disabled = false;
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+            }, 1000);
+        });
+        
+        xhr.addEventListener('error', () => {
+            showMessage('Erreur de connexion au serveur', 'error');
+            submitBtn.disabled = false;
+            progressContainer.style.display = 'none';
+        });
+        
+        xhr.open('POST', `${API_URL}/images/upload-multiple`);
+        xhr.setRequestHeader('Authorization', `Bearer ${authToken}`);
+        xhr.send(formData);
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        showMessage('Erreur lors du téléchargement', 'error');
+        submitBtn.disabled = false;
+        progressContainer.style.display = 'none';
+    }
+});
+
+// Category filter
+document.getElementById('categoryFilter').addEventListener('change', (e) => {
+    loadImageGallery(e.target.value);
+});
+
+// Copy image URL to clipboard
+function copyImageUrl(path) {
+    const fullUrl = window.location.origin + path;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+        showMessage('URL copiée dans le presse-papier');
+    }).catch(() => {
+        showMessage('Erreur lors de la copie', 'error');
+    });
+}
+
+// View image in new tab
+function viewImage(path) {
+    window.open(path, '_blank');
+}
+
+// Delete image
+function deleteImage(id) {
+    showDeleteModal(async () => {
+        try {
+            const response = await fetch(`${API_URL}/images/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
+                showMessage(data.message);
+                loadImageGallery(document.getElementById('categoryFilter').value);
+            } else {
+                showMessage(data.message || 'Erreur lors de la suppression', 'error');
+            }
+        } catch (error) {
+            console.error('Delete image error:', error);
+            showMessage('Erreur de connexion au serveur', 'error');
+        }
+    });
+}
+
 
 // ==================== INITIALIZATION ====================
 

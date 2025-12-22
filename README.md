@@ -21,15 +21,15 @@ Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé e
 - **API RESTful** - Backend Node.js/Express
 - **Gestion des actualités** - Créer, modifier et supprimer des articles
 - **Gestion du calendrier** - Ajouter et gérer les événements
-- **📸 Upload d'images** - Téléchargement direct avec génération automatique de miniatures ✅
+- **📸 Gestion d'images** - Upload, galerie, catégorisation et miniatures automatiques ✅
 - **Interface intuitive** - Tableau de bord facile à utiliser
 - **Sécurité renforcée** - Hash bcrypt, rate limiting, protection CSRF
 
-### 🎯 Fonctionnalités Avancées (En Développement)
-- ✅ **Upload d'images** - Système complet de gestion d'images
+### 🎯 Fonctionnalités Avancées
+- ✅ **Gestion d'images complète** - Upload multiple, catégorisation, miniatures automatiques
 - ⏳ **Réservation de cours** - Système de réservation en ligne
 - ⏳ **Newsletter** - Gestion des abonnés et campagnes email
-- ⏳ **Galerie photos** - Albums et galeries d'images
+- ⏳ **Galerie photos publique** - Albums et galeries d'images sur le site
 - ⏳ **Notifications push** - Notifications en temps réel
 - ⏳ **Blog** - Système de blog complet avec commentaires
 
@@ -156,6 +156,37 @@ ajj-clone/
 4. L'événement apparaît sur le site
 
 **Modifier/Supprimer :** Même processus que pour les actualités
+
+### Gestion des Images
+
+1. Dans l'onglet "Images"
+2. **Télécharger des images :**
+   - Cliquez sur "Sélectionner des images"
+   - Choisissez jusqu'à 10 images (formats: JPG, PNG, GIF, WebP)
+   - Sélectionnez une catégorie (Général, Actualités, Événements, Entraînements, Galerie)
+   - Cliquez sur "Télécharger"
+   - Une barre de progression affiche l'avancement
+3. **Gérer les images :**
+   - Filtrez par catégorie avec le menu déroulant
+   - Visualisez les miniatures dans la galerie
+   - Actions disponibles pour chaque image :
+     - **Copier l'URL** - Copie l'URL complète dans le presse-papier
+     - **Voir** - Ouvre l'image en taille réelle dans un nouvel onglet
+     - **Supprimer** - Supprime l'image (avec confirmation)
+
+**Caractéristiques :**
+- Upload multiple (jusqu'à 10 images simultanément)
+- Génération automatique de miniatures (300x300px)
+- Taille maximale : 5MB par image
+- Formats supportés : JPG, JPEG, PNG, GIF, WebP
+- Catégorisation pour une meilleure organisation
+- Stockage sécurisé dans `/uploads/`
+- Métadonnées enregistrées en base de données
+
+**Utilisation des images :**
+- Copiez l'URL d'une image
+- Utilisez-la dans les actualités ou ailleurs sur le site
+- Les images sont accessibles publiquement via leur URL
 
 ## 🎨 Personnalisation
 
@@ -325,7 +356,7 @@ kubectl exec -n ajj-jujitsu $POD -- npm run init-db
 - **[DOCKER-DEPLOYMENT.md](DOCKER-DEPLOYMENT.md)** - Guide complet Docker & Kubernetes
 - **[SETUP.md](SETUP.md)** - Installation et configuration détaillée
 - **[EMAIL-SETUP.md](EMAIL-SETUP.md)** - Configuration email pour formulaire de contact
-- **[IMAGE-UPLOAD-GUIDE.md](IMAGE-UPLOAD-GUIDE.md)** - Guide système d'upload d'images
+- **[IMAGE-UPLOAD-GUIDE.md](IMAGE-UPLOAD-GUIDE.md)** - Guide détaillé du système d'upload d'images ✅
 - **[FEATURES-ROADMAP.md](FEATURES-ROADMAP.md)** - Feuille de route des fonctionnalités
 
 ## 📱 Compatibilité
@@ -370,6 +401,15 @@ Pour toute question ou problème :
 
 ## 🔄 Mises à Jour Récentes
 
+### Version 2.1 (Décembre 2024)
+- ✅ **Système de gestion d'images complet**
+  - Upload multiple d'images (jusqu'à 10 simultanément)
+  - Génération automatique de miniatures
+  - Catégorisation des images
+  - Galerie avec filtres
+  - Copie d'URL facilitée
+- ✅ Interface admin améliorée avec onglet Images
+
 ### Version 2.0 (Décembre 2024)
 - ✅ Backend Node.js/Express implémenté
 - ✅ Base de données SQLite
@@ -378,14 +418,16 @@ Pour toute question ou problème :
 - ✅ Rate limiting et sécurité renforcée
 
 ### Fonctionnalités Futures Suggérées
-- [ ] Upload d'images directement depuis l'admin
+- [x] Upload d'images directement depuis l'admin ✅
 - [ ] Gestion des membres
 - [ ] Système de réservation de cours
 - [ ] Newsletter
-- [ ] Galerie photos
+- [ ] Galerie photos publique sur le site
 - [ ] Blog
 - [ ] Multilingue (FR/EN)
 - [ ] Notifications push
+- [ ] Éditeur WYSIWYG pour les actualités
+- [ ] Statistiques et analytics
 
 ## 📞 Contact Développeur
 
@@ -415,4 +457,4 @@ Pour des modifications ou améliorations, contactez le développeur du site.
 
 ---
 
-**Dernière mise à jour :** Décembre 2024 - Version 2.0 (Système sécurisé avec backend)
+**Dernière mise à jour :** Décembre 2024 - Version 2.1 (Système de gestion d'images intégré)
