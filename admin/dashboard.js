@@ -115,6 +115,29 @@ quill.on('text-change', function() {
     document.getElementById('newsContent').value = html;
 });
 
+// Initialize Quill editor for event description
+const eventQuill = new Quill('#eventEditor', {
+    theme: 'snow',
+    modules: {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['link', 'image'],
+            ['clean']
+        ]
+    },
+    placeholder: 'Décrivez votre événement ici...'
+});
+
+// Sync event Quill content with hidden input
+eventQuill.on('text-change', function() {
+    const html = eventQuill.root.innerHTML;
+    document.getElementById('eventDescription').value = html;
+});
+
 // Load news into table
 async function loadNewsTable() {
     const tbody = document.getElementById('newsTableBody');
@@ -312,10 +335,13 @@ async function loadCalendarTable() {
 document.getElementById('calendarForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Get content from event Quill editor
+    const description = eventQuill.root.innerHTML;
+    
     const formData = new FormData(e.target);
     const eventData = {
         title: formData.get('title'),
-        description: formData.get('description'),
+        description: description,
         date: formData.get('date')
     };
     
@@ -337,6 +363,7 @@ document.getElementById('calendarForm').addEventListener('submit', async (e) => 
         if (response.ok && data.success) {
             showMessage(data.message);
             e.target.reset();
+            eventQuill.setContents([]); // Clear event Quill editor
             editingEventId = null;
             document.getElementById('eventSubmitText').textContent = 'Ajouter';
             document.getElementById('cancelEventBtn').style.display = 'none';
@@ -362,7 +389,11 @@ async function editEvent(id) {
             const event = data.data;
             editingEventId = id;
             document.getElementById('eventTitle').value = event.title;
+            
+            // Set event Quill editor content
+            eventQuill.root.innerHTML = event.description;
             document.getElementById('eventDescription').value = event.description;
+            
             document.getElementById('eventDate').value = event.date;
             document.getElementById('eventSubmitText').textContent = 'Mettre à jour';
             document.getElementById('cancelEventBtn').style.display = 'inline-block';
@@ -378,6 +409,7 @@ async function editEvent(id) {
 document.getElementById('cancelEventBtn').addEventListener('click', () => {
     editingEventId = null;
     document.getElementById('calendarForm').reset();
+    eventQuill.setContents([]); // Clear event Quill editor
     document.getElementById('eventSubmitText').textContent = 'Ajouter';
     document.getElementById('cancelEventBtn').style.display = 'none';
 });

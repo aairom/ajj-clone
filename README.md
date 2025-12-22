@@ -20,7 +20,7 @@ Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé e
 - **Base de données SQLite** - Stockage sécurisé des données
 - **API RESTful** - Backend Node.js/Express
 - **Gestion des actualités** - Créer, modifier et supprimer des articles avec éditeur WYSIWYG
-- **Gestion du calendrier** - Ajouter et gérer les événements
+- **Gestion du calendrier** - Ajouter et gérer les événements avec éditeur WYSIWYG
 - **📸 Gestion d'images** - Upload, galerie, catégorisation et miniatures automatiques
 - **✍️ Éditeur WYSIWYG** - Éditeur de texte riche pour les actualités (Quill.js)
 - **Interface intuitive** - Tableau de bord facile à utiliser
@@ -181,12 +181,24 @@ ajj-clone/
 1. Dans l'onglet "Calendrier"
 2. Remplissez le formulaire :
    - Titre de l'événement
-   - Description
+   - **Description** - Utilisez l'éditeur WYSIWYG pour formater votre texte :
+     - Titres (H1, H2, H3)
+     - Gras, italique, souligné, barré
+     - Listes à puces et numérotées
+     - Couleurs de texte et de fond
+     - Alignement du texte
+     - Liens et images
    - Date
 3. Cliquez sur "Ajouter"
-4. L'événement apparaît sur le site
+4. L'événement apparaît sur le site avec le formatage
 
 **Modifier/Supprimer :** Même processus que pour les actualités
+
+**Fonctionnalités de l'éditeur :**
+- Identiques à l'éditeur des actualités
+- Formatage de texte riche
+- Insertion de liens et d'images
+- Prévisualisation en temps réel
 
 ### Gestion des Images
 
@@ -434,12 +446,13 @@ Pour toute question ou problème :
 ## 🔄 Mises à Jour Récentes
 
 ### Version 2.2 (Décembre 2024)
-- ✅ **Éditeur WYSIWYG pour les actualités**
+- ✅ **Éditeur WYSIWYG pour les actualités et événements**
   - Éditeur de texte riche avec Quill.js
   - Formatage avancé (gras, italique, titres, listes)
   - Insertion de liens et d'images
   - Couleurs personnalisées
   - Prévisualisation en temps réel
+  - Disponible pour actualités ET événements
 
 ### Version 2.1 (Décembre 2024)
 - ✅ **Système de gestion d'images complet**
@@ -460,6 +473,7 @@ Pour toute question ou problème :
 ### Fonctionnalités Futures Suggérées
 - [x] Upload d'images directement depuis l'admin ✅
 - [x] Éditeur WYSIWYG pour les actualités ✅
+- [x] Éditeur WYSIWYG pour les événements ✅
 - [ ] Gestion des membres
 - [ ] Système de réservation de cours
 - [ ] Newsletter
@@ -468,7 +482,6 @@ Pour toute question ou problème :
 - [ ] Multilingue (FR/EN)
 - [ ] Notifications push
 - [ ] Statistiques et analytics
-- [ ] Éditeur WYSIWYG pour les événements
 
 ## 📞 Contact Développeur
 
