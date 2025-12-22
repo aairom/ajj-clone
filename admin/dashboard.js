@@ -92,6 +92,29 @@ function formatDate(dateString) {
 
 let editingNewsId = null;
 
+// Initialize Quill editor for news content
+const quill = new Quill('#newsEditor', {
+    theme: 'snow',
+    modules: {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['link', 'image'],
+            ['clean']
+        ]
+    },
+    placeholder: 'Rédigez votre actualité ici...'
+});
+
+// Sync Quill content with hidden input
+quill.on('text-change', function() {
+    const html = quill.root.innerHTML;
+    document.getElementById('newsContent').value = html;
+});
+
 // Load news into table
 async function loadNewsTable() {
     const tbody = document.getElementById('newsTableBody');
@@ -136,10 +159,13 @@ async function loadNewsTable() {
 document.getElementById('newsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Get content from Quill editor
+    const content = quill.root.innerHTML;
+    
     const formData = new FormData(e.target);
     const newsData = {
         title: formData.get('title'),
-        content: formData.get('content'),
+        content: content,
         date: formData.get('date'),
         image: formData.get('image') || ''
     };
@@ -162,6 +188,7 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
         if (response.ok && data.success) {
             showMessage(data.message);
             e.target.reset();
+            quill.setContents([]); // Clear Quill editor
             editingNewsId = null;
             document.getElementById('newsSubmitText').textContent = 'Publier';
             document.getElementById('cancelNewsBtn').style.display = 'none';
@@ -187,7 +214,11 @@ async function editNews(id) {
             const item = data.data;
             editingNewsId = id;
             document.getElementById('newsTitle').value = item.title;
+            
+            // Set Quill editor content
+            quill.root.innerHTML = item.content;
             document.getElementById('newsContent').value = item.content;
+            
             document.getElementById('newsDate').value = item.date;
             document.getElementById('newsImage').value = item.image || '';
             document.getElementById('newsSubmitText').textContent = 'Mettre à jour';
@@ -204,6 +235,7 @@ async function editNews(id) {
 document.getElementById('cancelNewsBtn').addEventListener('click', () => {
     editingNewsId = null;
     document.getElementById('newsForm').reset();
+    quill.setContents([]); // Clear Quill editor
     document.getElementById('newsSubmitText').textContent = 'Publier';
     document.getElementById('cancelNewsBtn').style.display = 'none';
 });

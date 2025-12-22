@@ -19,14 +19,16 @@ Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé e
 - **Authentification JWT** - Système d'authentification moderne avec tokens
 - **Base de données SQLite** - Stockage sécurisé des données
 - **API RESTful** - Backend Node.js/Express
-- **Gestion des actualités** - Créer, modifier et supprimer des articles
+- **Gestion des actualités** - Créer, modifier et supprimer des articles avec éditeur WYSIWYG
 - **Gestion du calendrier** - Ajouter et gérer les événements
-- **📸 Gestion d'images** - Upload, galerie, catégorisation et miniatures automatiques ✅
+- **📸 Gestion d'images** - Upload, galerie, catégorisation et miniatures automatiques
+- **✍️ Éditeur WYSIWYG** - Éditeur de texte riche pour les actualités (Quill.js)
 - **Interface intuitive** - Tableau de bord facile à utiliser
 - **Sécurité renforcée** - Hash bcrypt, rate limiting, protection CSRF
 
 ### 🎯 Fonctionnalités Avancées
 - ✅ **Gestion d'images complète** - Upload multiple, catégorisation, miniatures automatiques
+- ✅ **Éditeur WYSIWYG** - Éditeur de texte riche avec formatage avancé
 - ⏳ **Réservation de cours** - Système de réservation en ligne
 - ⏳ **Newsletter** - Gestion des abonnés et campagnes email
 - ⏳ **Galerie photos publique** - Albums et galeries d'images sur le site
@@ -40,6 +42,8 @@ ajj-clone/
 ├── index.html              # Page principale
 ├── server.js               # Serveur Express
 ├── package.json            # Dépendances Node.js
+├── START.sh                # Script de démarrage rapide
+├── STOP.sh                 # Script d'arrêt des services
 ├── .env                    # Configuration (ne pas commiter)
 ├── .env.example            # Template de configuration
 ├── css/
@@ -108,6 +112,18 @@ ajj-clone/
    ```bash
    npm run dev
    ```
+   
+   **Script de démarrage rapide :**
+   ```bash
+   ./START.sh
+   ```
+   Ce script vérifie et installe automatiquement les dépendances, crée le fichier .env, initialise la base de données et démarre le serveur.
+   
+   **Arrêter le serveur :**
+   ```bash
+   ./STOP.sh
+   ```
+   Ce script arrête proprement tous les services Node.js sur le port 3000.
 
 6. **Accédez au site**
    - Site public : `http://localhost:3000/`
@@ -131,11 +147,26 @@ ajj-clone/
 1. Dans l'onglet "Actualités"
 2. Remplissez le formulaire :
    - Titre de l'actualité
-   - Contenu
+   - **Contenu** - Utilisez l'éditeur WYSIWYG pour formater votre texte :
+     - Titres (H1, H2, H3)
+     - Gras, italique, souligné, barré
+     - Listes à puces et numérotées
+     - Couleurs de texte et de fond
+     - Alignement du texte
+     - Liens et images
    - Date de publication
    - URL d'image (optionnel)
 3. Cliquez sur "Publier"
-4. L'actualité apparaît immédiatement sur le site
+4. L'actualité apparaît immédiatement sur le site avec le formatage
+
+**Fonctionnalités de l'éditeur :**
+- Formatage de texte riche (gras, italique, souligné)
+- Titres et sous-titres
+- Listes ordonnées et non ordonnées
+- Couleurs personnalisées
+- Insertion de liens et d'images
+- Alignement du texte
+- Prévisualisation en temps réel
 
 **Modifier une actualité :**
 - Cliquez sur "Modifier" dans la liste
@@ -387,6 +418,7 @@ kubectl exec -n ajj-jujitsu $POD -- npm run init-db
 - **multer** - Upload de fichiers
 - **sharp** - Traitement d'images
 - **uuid** - Génération d'identifiants uniques
+- **Quill.js** - Éditeur WYSIWYG (frontend)
 
 ## 📄 Licence
 
@@ -400,6 +432,14 @@ Pour toute question ou problème :
 3. Contactez le développeur
 
 ## 🔄 Mises à Jour Récentes
+
+### Version 2.2 (Décembre 2024)
+- ✅ **Éditeur WYSIWYG pour les actualités**
+  - Éditeur de texte riche avec Quill.js
+  - Formatage avancé (gras, italique, titres, listes)
+  - Insertion de liens et d'images
+  - Couleurs personnalisées
+  - Prévisualisation en temps réel
 
 ### Version 2.1 (Décembre 2024)
 - ✅ **Système de gestion d'images complet**
@@ -419,6 +459,7 @@ Pour toute question ou problème :
 
 ### Fonctionnalités Futures Suggérées
 - [x] Upload d'images directement depuis l'admin ✅
+- [x] Éditeur WYSIWYG pour les actualités ✅
 - [ ] Gestion des membres
 - [ ] Système de réservation de cours
 - [ ] Newsletter
@@ -426,8 +467,8 @@ Pour toute question ou problème :
 - [ ] Blog
 - [ ] Multilingue (FR/EN)
 - [ ] Notifications push
-- [ ] Éditeur WYSIWYG pour les actualités
 - [ ] Statistiques et analytics
+- [ ] Éditeur WYSIWYG pour les événements
 
 ## 📞 Contact Développeur
 
@@ -457,4 +498,4 @@ Pour des modifications ou améliorations, contactez le développeur du site.
 
 ---
 
-**Dernière mise à jour :** Décembre 2024 - Version 2.1 (Système de gestion d'images intégré)
+**Dernière mise à jour :** Décembre 2024 - Version 2.2 (Éditeur WYSIWYG intégré)

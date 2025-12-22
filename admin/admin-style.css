@@ -616,6 +616,70 @@ input[type="file"]:hover {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 1rem;
     }
+
+/* Quill WYSIWYG Editor Styling */
+.ql-container {
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.ql-editor {
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ql-toolbar {
+    background: #f8f9fa;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.ql-container {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border: 1px solid #ddd;
+    border-top: none;
+}
+
+.ql-editor.ql-blank::before {
+    color: #999;
+    font-style: italic;
+}
+
+/* Quill editor focus state */
+.ql-container.ql-snow {
+    border-color: #ddd;
+}
+
+.ql-toolbar.ql-snow {
+    border-color: #ddd;
+}
+
+#newsEditor:focus-within .ql-toolbar,
+#newsEditor:focus-within .ql-container {
+    border-color: var(--accent-color);
+}
+
+/* Quill button styling */
+.ql-toolbar button {
+    transition: all 0.2s;
+}
+
+.ql-toolbar button:hover {
+    color: var(--accent-color);
+}
+
+.ql-toolbar button.ql-active {
+    color: var(--accent-color);
+}
+
+/* Ensure proper spacing */
+.form-group #newsEditor {
+    margin-top: 0.5rem;
+}
+
     
     .image-thumbnail {
         height: 150px;
