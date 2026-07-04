@@ -1,514 +1,285 @@
-# Asnières Jujitsu - Site Web
+# Asnières Jujitsu — Site Web
 
-Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé en HTML, CSS et JavaScript avec un panneau d'administration intégré.
+Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé en HTML/CSS/JavaScript avec un panneau d'administration sécurisé (Node.js + Express + SQLite).
+
+---
+
+## 🏗️ Architecture
+
+```mermaid
+graph TB
+    subgraph Client["Client (Browser)"]
+        PUB[Public Pages<br/>index.html, faq.html, …]
+        ADM[Admin Panel<br/>admin/login.html<br/>admin/dashboard.html]
+    end
+
+    subgraph Server["Node.js / Express (server.js)"]
+        RL[Rate Limiter]
+        AUTH_MW[JWT Middleware]
+        STATIC[Static Files]
+
+        subgraph Routes["API Routes"]
+            R_AUTH["/api/auth"]
+            R_NEWS["/api/news"]
+            R_CAL["/api/calendar"]
+            R_CONTACT["/api/contact"]
+            R_IMG["/api/images"]
+        end
+    end
+
+    subgraph Storage["Persistence"]
+        DB[(SQLite<br/>data/admin.db)]
+        FS[uploads/]
+    end
+
+    SMTP[Gmail / SMTP<br/>nodemailer]
+
+    PUB --> STATIC
+    ADM --> RL --> AUTH_MW
+    AUTH_MW --> R_AUTH & R_NEWS & R_CAL & R_CONTACT & R_IMG
+    R_AUTH & R_NEWS & R_CAL & R_IMG --> DB
+    R_IMG --> FS
+    R_CONTACT --> SMTP
+```
+
+---
+
+## 🔄 Workflow
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Express
+    participant Auth
+    participant DB
+
+    Browser->>Express: POST /api/auth/login
+    Express->>Auth: rate-limit check
+    Auth->>DB: SELECT user
+    DB-->>Auth: row
+    Auth->>Auth: bcrypt.compare
+    Auth-->>Browser: JWT token
+
+    Browser->>Express: GET /api/news (Bearer token)
+    Express->>Auth: verifyToken
+    Auth->>DB: SELECT session
+    DB-->>Auth: valid
+    Express->>DB: SELECT news
+    DB-->>Express: rows
+    Express-->>Browser: {news: [...]}
+```
+
+---
 
 ## 🚀 Fonctionnalités
 
 ### Site Public
-- **Page d'accueil** avec présentation du club
-- **Section Actualités** - Affichage dynamique des dernières nouvelles
-- **Le Club** - Présentation de l'histoire et de la philosophie
-- **Horaires** - Planning des cours de la semaine
-- **Calendrier** - Événements à venir (stages, compétitions, etc.)
-- **Tarifs** - Différentes formules d'abonnement
-- **Contact** - Formulaire de contact et informations pratiques
-- **Design responsive** - Compatible mobile, tablette et desktop
-- **Navigation fluide** - Smooth scrolling et menu mobile
+- Page d'accueil avec présentation du club
+- Actualités dynamiques
+- Horaires, calendrier, tarifs
+- Formulaire de contact
+- Design responsive (mobile / tablette / desktop)
 
 ### Panneau d'Administration Sécurisé
-- **Authentification JWT** - Système d'authentification moderne avec tokens
-- **Base de données SQLite** - Stockage sécurisé des données
-- **API RESTful** - Backend Node.js/Express
-- **Gestion des actualités** - Créer, modifier et supprimer des articles avec éditeur WYSIWYG
-- **Gestion du calendrier** - Ajouter et gérer les événements avec éditeur WYSIWYG
-- **📸 Gestion d'images** - Upload, galerie, catégorisation et miniatures automatiques
-- **✍️ Éditeur WYSIWYG** - Éditeur de texte riche pour les actualités (Quill.js)
-- **Interface intuitive** - Tableau de bord facile à utiliser
-- **Sécurité renforcée** - Hash bcrypt, rate limiting, protection CSRF
+- Authentification JWT + sessions SQLite
+- Gestion des actualités (WYSIWYG Quill.js)
+- Gestion du calendrier (WYSIWYG Quill.js)
+- Upload d'images (multiple, miniatures automatiques, catégorisation)
+- Rate limiting, bcrypt, protection CSRF
 
-### 🎯 Fonctionnalités Avancées
-- ✅ **Gestion d'images complète** - Upload multiple, catégorisation, miniatures automatiques
-- ✅ **Éditeur WYSIWYG** - Éditeur de texte riche avec formatage avancé
-- ⏳ **Réservation de cours** - Système de réservation en ligne
-- ⏳ **Newsletter** - Gestion des abonnés et campagnes email
-- ⏳ **Galerie photos publique** - Albums et galeries d'images sur le site
-- ⏳ **Notifications push** - Notifications en temps réel
-- ⏳ **Blog** - Système de blog complet avec commentaires
+### Fonctionnalités Futures
+- ⏳ Réservation de cours en ligne
+- ⏳ Newsletter
+- ⏳ Galerie photos publique
+- ⏳ Notifications push
+- ⏳ Blog avec commentaires
+
+---
 
 ## 📁 Structure du Projet
 
 ```
 ajj-clone/
-├── index.html              # Page principale
 ├── server.js               # Serveur Express
-├── package.json            # Dépendances Node.js
-├── START.sh                # Script de démarrage rapide
-├── STOP.sh                 # Script d'arrêt des services
-├── .env                    # Configuration (ne pas commiter)
+├── package.json
 ├── .env.example            # Template de configuration
-├── css/
-│   └── style.css          # Styles du site
-├── js/
-│   └── main.js            # JavaScript principal
-├── admin/
-│   ├── login.html         # Page de connexion admin
-│   ├── login.js           # Logique de connexion (API)
-│   ├── dashboard.html     # Tableau de bord admin
-│   ├── dashboard.js       # Logique du dashboard (API)
-│   └── admin-style.css    # Styles de l'admin
-├── routes/
-│   ├── auth.js            # Routes d'authentification
-│   ├── news.js            # Routes actualités
-│   └── calendar.js        # Routes calendrier
-├── middleware/
-│   └── auth.js            # Middleware JWT
 ├── scripts/
-│   └── init-db.js         # Initialisation base de données
-├── data/
-│   └── admin.db           # Base de données SQLite
-├── images/                # Dossier pour les images
-├── SETUP.md               # Guide d'installation détaillé
-├── README-SECURE-LOGIN.md # Documentation système sécurisé
-└── README.md              # Ce fichier
+│   ├── START.sh            # Démarrage en mode détaché
+│   ├── STOP.sh             # Arrêt gracieux
+│   └── init-db.js          # Initialisation SQLite
+├── Dockerfile
+├── docker-compose.yml
+│
+├── Docs/                   # Documentation
+│   ├── Architecture.md     # Diagrammes Mermaid
+│   ├── Quickstart.md       # Démarrage rapide
+│   ├── SETUP.md            # Installation détaillée
+│   ├── DOCKER-DEPLOYMENT.md
+│   ├── EMAIL-SETUP.md
+│   ├── IMAGE-UPLOAD-GUIDE.md
+│   ├── FEATURES-ROADMAP.md
+│   └── README-SECURE-LOGIN.md
+│
+├── admin/                  # Interface admin
+│   ├── login.html / login.js
+│   ├── dashboard.html / dashboard.js
+│   └── admin-style.css
+│
+├── routes/                 # Routes API
+│   ├── auth.js
+│   ├── news.js
+│   ├── calendar.js
+│   ├── contact.js
+│   └── images.js
+│
+├── middleware/
+│   ├── auth.js             # Middleware JWT
+│   └── upload.js           # Multer
+│
+├── scripts/
+│   ├── START.sh            # Démarrage en mode détaché
+│   ├── STOP.sh             # Arrêt gracieux
+│   └── init-db.js          # Initialisation SQLite
+│
+├── data/                   # Base de données (gitignorée)
+├── uploads/                # Fichiers uploadés (gitignorés)
+├── k8s/                    # Manifests Kubernetes
+├── css/ / js/ / images/    # Assets publics
+└── index.html              # Page principale
 ```
 
-## 🔧 Installation et Utilisation
+---
 
-### Prérequis
-- **Node.js** v18.x ou v20.x (LTS recommandé)
-- **npm** (inclus avec Node.js)
+## ⚡ Démarrage Rapide
 
-⚠️ **Important:** Node.js v24+ n'est pas encore compatible avec better-sqlite3. Utilisez Node.js v20 LTS.
+```bash
+# 1. Installer les dépendances
+npm install
 
-### Installation
+# 2. Configurer l'environnement
+cp .env.example .env
+# Éditer .env — changer JWT_SECRET obligatoirement
 
-1. **Clonez le projet**
-   ```bash
-   git clone [url-du-repo]
-   cd ajj-clone
-   ```
+# 3. Initialiser la base de données
+npm run init-db
 
-2. **Installez les dépendances**
-   ```bash
-   npm install
-   ```
+# 4. Démarrer (mode détaché)
+./scripts/START.sh
 
-3. **Configurez l'environnement**
-   ```bash
-   cp .env.example .env
-   ```
-   Éditez `.env` et changez le `JWT_SECRET` (obligatoire en production)
-
-4. **Initialisez la base de données**
-   ```bash
-   npm run init-db
-   ```
-
-5. **Démarrez le serveur**
-   ```bash
-   npm start
-   ```
-   Ou en mode développement avec auto-reload:
-   ```bash
-   npm run dev
-   ```
-   
-   **Script de démarrage rapide :**
-   ```bash
-   ./START.sh
-   ```
-   Ce script vérifie et installe automatiquement les dépendances, crée le fichier .env, initialise la base de données et démarre le serveur.
-   
-   **Arrêter le serveur :**
-   ```bash
-   ./STOP.sh
-   ```
-   Ce script arrête proprement tous les services Node.js sur le port 3000.
-
-6. **Accédez au site**
-   - Site public : `http://localhost:3000/`
-   - Administration : `http://localhost:3000/admin/login.html`
-
-### Identifiants par Défaut
-
-**⚠️ IMPORTANT : Changez ces identifiants en production !**
-
-- **Nom d'utilisateur** : `admin`
-- **Mot de passe** : `admin123`
-
-## 📝 Guide d'Utilisation de l'Administration
-
-### Connexion
-1. Cliquez sur l'icône cadenas dans le menu ou allez sur `/admin/login.html`
-2. Entrez les identifiants
-3. Vous serez redirigé vers le tableau de bord
-
-### Gestion des Actualités
-1. Dans l'onglet "Actualités"
-2. Remplissez le formulaire :
-   - Titre de l'actualité
-   - **Contenu** - Utilisez l'éditeur WYSIWYG pour formater votre texte :
-     - Titres (H1, H2, H3)
-     - Gras, italique, souligné, barré
-     - Listes à puces et numérotées
-     - Couleurs de texte et de fond
-     - Alignement du texte
-     - Liens et images
-   - Date de publication
-   - URL d'image (optionnel)
-3. Cliquez sur "Publier"
-4. L'actualité apparaît immédiatement sur le site avec le formatage
-
-**Fonctionnalités de l'éditeur :**
-- Formatage de texte riche (gras, italique, souligné)
-- Titres et sous-titres
-- Listes ordonnées et non ordonnées
-- Couleurs personnalisées
-- Insertion de liens et d'images
-- Alignement du texte
-- Prévisualisation en temps réel
-
-**Modifier une actualité :**
-- Cliquez sur "Modifier" dans la liste
-- Modifiez les champs
-- Cliquez sur "Mettre à jour"
-
-**Supprimer une actualité :**
-- Cliquez sur "Supprimer"
-- Confirmez la suppression
-
-### Gestion du Calendrier
-1. Dans l'onglet "Calendrier"
-2. Remplissez le formulaire :
-   - Titre de l'événement
-   - **Description** - Utilisez l'éditeur WYSIWYG pour formater votre texte :
-     - Titres (H1, H2, H3)
-     - Gras, italique, souligné, barré
-     - Listes à puces et numérotées
-     - Couleurs de texte et de fond
-     - Alignement du texte
-     - Liens et images
-   - Date
-3. Cliquez sur "Ajouter"
-4. L'événement apparaît sur le site avec le formatage
-
-**Modifier/Supprimer :** Même processus que pour les actualités
-
-**Fonctionnalités de l'éditeur :**
-- Identiques à l'éditeur des actualités
-- Formatage de texte riche
-- Insertion de liens et d'images
-- Prévisualisation en temps réel
-
-### Gestion des Images
-
-1. Dans l'onglet "Images"
-2. **Télécharger des images :**
-   - Cliquez sur "Sélectionner des images"
-   - Choisissez jusqu'à 10 images (formats: JPG, PNG, GIF, WebP)
-   - Sélectionnez une catégorie (Général, Actualités, Événements, Entraînements, Galerie)
-   - Cliquez sur "Télécharger"
-   - Une barre de progression affiche l'avancement
-3. **Gérer les images :**
-   - Filtrez par catégorie avec le menu déroulant
-   - Visualisez les miniatures dans la galerie
-   - Actions disponibles pour chaque image :
-     - **Copier l'URL** - Copie l'URL complète dans le presse-papier
-     - **Voir** - Ouvre l'image en taille réelle dans un nouvel onglet
-     - **Supprimer** - Supprime l'image (avec confirmation)
-
-**Caractéristiques :**
-- Upload multiple (jusqu'à 10 images simultanément)
-- Génération automatique de miniatures (300x300px)
-- Taille maximale : 5MB par image
-- Formats supportés : JPG, JPEG, PNG, GIF, WebP
-- Catégorisation pour une meilleure organisation
-- Stockage sécurisé dans `/uploads/`
-- Métadonnées enregistrées en base de données
-
-**Utilisation des images :**
-- Copiez l'URL d'une image
-- Utilisez-la dans les actualités ou ailleurs sur le site
-- Les images sont accessibles publiquement via leur URL
-
-## 🎨 Personnalisation
-
-### Couleurs
-Modifiez les variables CSS dans `css/style.css` :
-
-```css
-:root {
-    --primary-color: #1a1a2e;      /* Couleur principale */
-    --secondary-color: #16213e;     /* Couleur secondaire */
-    --accent-color: #e94560;        /* Couleur d'accent */
-    --light-color: #f1f1f1;         /* Couleur claire */
-}
+# 5. Arrêter
+./scripts/STOP.sh
 ```
 
-### Contenu
-- **Horaires** : Modifiez directement dans `index.html` (section `#horaires`)
-- **Tarifs** : Modifiez dans `index.html` (section `#tarifs`)
-- **Informations de contact** : Modifiez dans `index.html` (section `#contact`)
-- **Logo et images** : Ajoutez vos images dans le dossier `images/`
+👉 Voir [`Docs/Quickstart.md`](Docs/Quickstart.md) pour le guide complet.
 
-### Textes
-Tous les textes sont modifiables directement dans `index.html`. Recherchez les sections par leur ID :
-- `#accueil` - Page d'accueil
-- `#club` - Présentation du club
-- `#contact` - Informations de contact
+---
 
-## 🔒 Sécurité
+## 🔧 Installation
 
-### Fonctionnalités de Sécurité Implémentées
+| Prérequis | Version |
+|-----------|---------|
+| Node.js | v18 LTS ou v20 LTS |
+| npm | inclus avec Node.js |
 
-✅ **Authentification JWT** - Tokens sécurisés avec expiration
-✅ **Hash bcrypt** - Mots de passe hashés (10 rounds)
-✅ **Rate Limiting** - Protection contre les attaques par force brute
-✅ **SQL Injection** - Protection via prepared statements
-✅ **Base de données locale** - SQLite avec données chiffrées
-✅ **Variables d'environnement** - Configuration sécurisée via .env
+> ⚠️ Node.js v24+ n'est pas encore compatible avec `better-sqlite3`. Utilisez Node.js v20 LTS.
 
-### Pour un Environnement de Production
+Voir [`Docs/SETUP.md`](Docs/SETUP.md) pour les détails complets.
 
-**⚠️ IMPORTANT :** Avant de déployer en production :
-
-1. **Changez le JWT_SECRET**
-   ```bash
-   # Générez un secret fort
-   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-   ```
-   Mettez à jour `.env` avec le secret généré
-
-2. **Changez les identifiants par défaut**
-   - Connectez-vous immédiatement après l'installation
-   - Utilisez l'endpoint `/api/auth/change-password`
-
-3. **Configurez HTTPS**
-   - Utilisez un reverse proxy (nginx, Apache)
-   - Obtenez un certificat SSL (Let's Encrypt gratuit)
-
-4. **Sécurisez la base de données**
-   ```bash
-   chmod 600 data/admin.db
-   ```
-
-5. **Configurez les backups**
-   - Sauvegardez régulièrement `data/admin.db`
-   - Utilisez un système de versioning
-
-6. **Mettez à jour NODE_ENV**
-   ```env
-   NODE_ENV=production
-   ```
+---
 
 ## 🌐 Déploiement
 
-### Options de Déploiement
-
-Le site peut être déployé de plusieurs façons :
-
-1. **🐳 Docker** (Recommandé) - Déploiement conteneurisé
-2. **☸️ Kubernetes** - Orchestration pour production
-3. **🖥️ Serveur Traditionnel** - Installation directe
-
-### 🐳 Déploiement Docker
-
-**Quick Start avec Docker Compose:**
+### Docker (recommandé)
 
 ```bash
-# Cloner et configurer
-git clone <repository-url>
-cd ajj-clone
-cp .env.example .env
-# Éditer .env avec vos valeurs
-
-# Démarrer l'application
+cp .env.example .env   # éditer les valeurs
 docker-compose up -d
-
-# Initialiser la base de données
 docker-compose exec app npm run init-db
 ```
 
-**Accès:** http://localhost:3000
-
-**Commandes utiles:**
-```bash
-# Voir les logs
-docker-compose logs -f app
-
-# Arrêter
-docker-compose down
-
-# Rebuild après modifications
-docker-compose up -d --build
-```
-
-### ☸️ Déploiement Kubernetes
-
-**Prérequis:** Cluster Kubernetes et kubectl configuré
+### Kubernetes
 
 ```bash
-# Build et push l'image
-docker build -t your-registry/ajj-app:v1.0.0 .
-docker push your-registry/ajj-app:v1.0.0
-
-# Déployer avec kubectl
-kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/secret.yaml
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/persistentvolume.yaml
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-kubectl apply -f k8s/ingress.yaml
-
-# Ou avec Kustomize
 kubectl apply -k k8s/
-
-# Initialiser la base
 POD=$(kubectl get pods -n ajj-jujitsu -l app=ajj-app -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -n ajj-jujitsu $POD -- npm run init-db
 ```
 
-**Fonctionnalités Kubernetes:**
-- ✅ Auto-scaling (HPA) - 2 à 10 pods
-- ✅ Health checks et readiness probes
-- ✅ Rolling updates sans downtime
-- ✅ Persistent storage pour SQLite
-- ✅ Ingress avec TLS/SSL
-
-### 🖥️ Déploiement Serveur Traditionnel
-
-**Pour VPS/Cloud (OVH, DigitalOcean, AWS EC2, etc.):**
-
-1. Installez Node.js v20 LTS
-2. Clonez le projet
-3. Configurez `.env` avec des valeurs de production
-4. Installez les dépendances: `npm install`
-5. Initialisez la base: `npm run init-db`
-6. Utilisez PM2 pour la gestion du processus:
-   ```bash
-   npm install -g pm2
-   pm2 start server.js --name ajj-admin
-   pm2 save
-   pm2 startup
-   ```
-7. Configurez nginx comme reverse proxy
-
-### 📚 Documentation Complète
-
-- **[DOCKER-DEPLOYMENT.md](DOCKER-DEPLOYMENT.md)** - Guide complet Docker & Kubernetes
-- **[SETUP.md](SETUP.md)** - Installation et configuration détaillée
-- **[EMAIL-SETUP.md](EMAIL-SETUP.md)** - Configuration email pour formulaire de contact
-- **[IMAGE-UPLOAD-GUIDE.md](IMAGE-UPLOAD-GUIDE.md)** - Guide détaillé du système d'upload d'images ✅
-- **[FEATURES-ROADMAP.md](FEATURES-ROADMAP.md)** - Feuille de route des fonctionnalités
-
-## 📱 Compatibilité
-
-- ✅ Chrome (dernières versions)
-- ✅ Firefox (dernières versions)
-- ✅ Safari (dernières versions)
-- ✅ Edge (dernières versions)
-- ✅ Mobile (iOS Safari, Chrome Android)
-
-## 🛠️ Technologies Utilisées
-
-### Frontend
-- **HTML5** - Structure
-- **CSS3** - Styles et animations
-- **JavaScript (Vanilla)** - Interactivité
-- **Font Awesome** - Icônes
-
-### Backend
-- **Node.js** - Runtime JavaScript
-- **Express.js** - Framework web
-- **SQLite** (better-sqlite3) - Base de données
-- **bcrypt** - Hash de mots de passe
-- **jsonwebtoken** - Authentification JWT
-- **express-rate-limit** - Protection rate limiting
-- **dotenv** - Gestion variables d'environnement
-- **nodemailer** - Envoi d'emails
-- **multer** - Upload de fichiers
-- **sharp** - Traitement d'images
-- **uuid** - Génération d'identifiants uniques
-- **Quill.js** - Éditeur WYSIWYG (frontend)
-
-## 📄 Licence
-
-Ce projet est fourni tel quel pour le club Asnières Jujitsu.
-
-## 🤝 Support
-
-Pour toute question ou problème :
-1. Consultez ce README
-2. Vérifiez la console du navigateur (F12) pour les erreurs
-3. Contactez le développeur
-
-## 🔄 Mises à Jour Récentes
-
-### Version 2.2 (Décembre 2025)
-- ✅ **Éditeur WYSIWYG pour les actualités et événements**
-  - Éditeur de texte riche avec Quill.js
-  - Formatage avancé (gras, italique, titres, listes)
-  - Insertion de liens et d'images
-  - Couleurs personnalisées
-  - Prévisualisation en temps réel
-  - Disponible pour actualités ET événements
-
-### Version 2.1 (Décembre 2025)
-- ✅ **Système de gestion d'images complet**
-  - Upload multiple d'images (jusqu'à 10 simultanément)
-  - Génération automatique de miniatures
-  - Catégorisation des images
-  - Galerie avec filtres
-  - Copie d'URL facilitée
-- ✅ Interface admin améliorée avec onglet Images
-
-### Version 2.0 (Décembre 2025)
-- ✅ Backend Node.js/Express implémenté
-- ✅ Base de données SQLite
-- ✅ Authentification JWT sécurisée
-- ✅ API RESTful complète
-- ✅ Rate limiting et sécurité renforcée
-
-### Fonctionnalités Futures Suggérées
-- [x] Upload d'images directement depuis l'admin ✅
-- [x] Éditeur WYSIWYG pour les actualités ✅
-- [x] Éditeur WYSIWYG pour les événements ✅
-- [ ] Gestion des membres
-- [ ] Système de réservation de cours
-- [ ] Newsletter
-- [ ] Galerie photos publique sur le site
-- [ ] Blog
-- [ ] Multilingue (FR/EN)
-- [ ] Notifications push
-- [ ] Statistiques et analytics
-
-## 📞 Contact Développeur
-
-Pour des modifications ou améliorations, contactez le développeur du site.
-
-## 📚 Documentation Complémentaire
-
-- **[SETUP.md](SETUP.md)** - Guide d'installation détaillé
-- **[README-SECURE-LOGIN.md](README-SECURE-LOGIN.md)** - Documentation du système d'authentification
-- **[.env.example](.env.example)** - Template de configuration
-
-## 🐛 Dépannage
-
-### Problèmes d'installation
-
-**Erreur avec better-sqlite3:**
-- Assurez-vous d'utiliser Node.js v18 ou v20 (pas v24+)
-- Installez les outils de build: `xcode-select --install` (macOS)
-
-**Le serveur ne démarre pas:**
-- Vérifiez que le port 3000 n'est pas utilisé
-- Vérifiez que `.env` existe et contient JWT_SECRET
-
-**Erreurs de base de données:**
-- Supprimez `data/admin.db` et relancez `npm run init-db`
-- Vérifiez les permissions du dossier `data/`
+Voir [`Docs/DOCKER-DEPLOYMENT.md`](Docs/DOCKER-DEPLOYMENT.md) pour le guide complet.
 
 ---
 
-**Dernière mise à jour :** Décembre 2024 - Version 2.2 (Éditeur WYSIWYG intégré)
+## 🔒 Sécurité
+
+| Mécanisme | Détail |
+|-----------|--------|
+| Authentification | JWT (24h) + tracking de sessions |
+| Mots de passe | bcrypt (10 rounds) |
+| Rate limiting | 5 tentatives login / 15 min |
+| SQL injection | Prepared statements |
+| Variables sensibles | `.env` (jamais committé) |
+
+**Avant la production :**
+1. Générer un `JWT_SECRET` fort : `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+2. Changer les identifiants par défaut (`admin` / `admin123`)
+3. Activer HTTPS (reverse proxy nginx / Apache)
+4. `chmod 600 data/admin.db`
+
+---
+
+## 🛠️ Technologies
+
+**Frontend** : HTML5, CSS3, JavaScript, Font Awesome, Quill.js  
+**Backend** : Node.js, Express.js, better-sqlite3, bcrypt, jsonwebtoken, express-rate-limit, nodemailer, multer, sharp, uuid, dotenv
+
+---
+
+## 📄 Licence
+
+Ce projet est distribué sous licence **ISC**.  
+Fourni tel quel pour le club Asnières Jujitsu.
+
+---
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [`Docs/Quickstart.md`](Docs/Quickstart.md) | Démarrage rapide (scripts dans `scripts/`) |
+| [`Docs/Architecture.md`](Docs/Architecture.md) | Diagrammes d'architecture |
+| [`Docs/SETUP.md`](Docs/SETUP.md) | Installation détaillée |
+| [`Docs/DOCKER-DEPLOYMENT.md`](Docs/DOCKER-DEPLOYMENT.md) | Docker & Kubernetes |
+| [`Docs/EMAIL-SETUP.md`](Docs/EMAIL-SETUP.md) | Configuration email |
+| [`Docs/IMAGE-UPLOAD-GUIDE.md`](Docs/IMAGE-UPLOAD-GUIDE.md) | Système d'upload |
+| [`Docs/FEATURES-ROADMAP.md`](Docs/FEATURES-ROADMAP.md) | Feuille de route |
+| [`Docs/README-SECURE-LOGIN.md`](Docs/README-SECURE-LOGIN.md) | Système d'authentification |
+
+---
+
+## 🐛 Dépannage
+
+| Problème | Solution |
+|----------|----------|
+| Port déjà utilisé | `lsof -ti:3000` puis `kill <PID>` |
+| Erreurs base de données | `rm data/admin.db && npm run init-db` |
+| Login échoue | Vérifier `.env`, port correct, console navigateur |
+| Erreur CORS | Vérifier `API_URL` dans les fichiers admin |
+
+Logs du serveur : `tail -f server.log`
+
+---
+
+## 🔄 Historique des Versions
+
+### v2.2 (Décembre 2025)
+- ✅ Éditeur WYSIWYG (Quill.js) pour actualités et événements
+
+### v2.1 (Décembre 2025)
+- ✅ Upload multiple d'images, miniatures automatiques, catégorisation
+
+### v2.0 (Décembre 2025)
+- ✅ Backend Node.js/Express, SQLite, JWT, API RESTful complète
+
+---
+
+*Made with ❤️ by Bob*

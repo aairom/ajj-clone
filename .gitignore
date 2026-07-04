@@ -63,3 +63,8 @@ yarn.lock
 # Uploaded files
 uploads/
 !uploads/.gitkeep
+# Folders starting with underscore (local-only resources)
+_*/
+
+# Playwright MCP session data
+.playwright-mcp/
