@@ -9,7 +9,7 @@ Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé e
 ```mermaid
 graph TB
     subgraph Client["Client (Browser)"]
-        PUB[Public Pages<br/>index.html, faq.html, …]
+        PUB[Public Pages<br/>index.html<br/>Pages/*.html]
         ADM[Admin Panel<br/>admin/login.html<br/>admin/dashboard.html]
     end
 
@@ -179,18 +179,38 @@ npm run init-db
 
 > ⚠️ Node.js v24+ n'est pas encore compatible avec `better-sqlite3`. Utilisez Node.js v20 LTS.
 
-Voir [`Docs/SETUP.md`](Docs/SETUP.md) pour les détails complets.
+Voir [`Docs/SETUP.md`](Docs/SETUP.md) pour les détails complets (le fichier est dans le dossier `Docs/`).
 
 ---
 
 ## 🌐 Déploiement
 
-### Docker (recommandé)
+### Docker / Podman (recommandé)
+
+Image optimisée — **244 MB** (multi-stage Alpine, non-root).
 
 ```bash
-cp .env.example .env   # éditer les valeurs
+cp .env.example .env          # éditer JWT_SECRET et EMAIL_*
+mkdir -p data uploads logs
+
+# Docker
 docker-compose up -d
-docker-compose exec app npm run init-db
+docker-compose exec app node scripts/init-db.js
+
+# Podman
+podman-compose up -d
+podman exec ajj-app node scripts/init-db.js
+```
+
+Ou avec Podman directement :
+
+```bash
+podman build -t ajj-app:latest .
+podman run -d --name ajj-app -p 3000:3000 \
+  -e JWT_SECRET=<secret> \
+  -v $(pwd)/data:/app/data:Z \
+  ajj-app:latest
+podman exec ajj-app node scripts/init-db.js
 ```
 
 ### Kubernetes
@@ -198,7 +218,7 @@ docker-compose exec app npm run init-db
 ```bash
 kubectl apply -k k8s/
 POD=$(kubectl get pods -n ajj-jujitsu -l app=ajj-app -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -n ajj-jujitsu $POD -- npm run init-db
+kubectl exec -n ajj-jujitsu $POD -- node scripts/init-db.js
 ```
 
 Voir [`Docs/DOCKER-DEPLOYMENT.md`](Docs/DOCKER-DEPLOYMENT.md) pour le guide complet.
@@ -267,11 +287,16 @@ Logs du serveur : `tail -f server.log`
 
 ## 🔄 Historique des Versions
 
+### v2.4 (Juillet 2026)
+- ✅ Image Docker/Podman optimisée — multi-stage Alpine, **244 MB** (vs 1.2 GB), non-root
+- ✅ Runtime Podman switché de gVisor (`runsc`) → `crun` pour compatibilité macOS
+- ✅ Pages publiques secondaires déplacées dans `Pages/` (tous les liens mis à jour)
+
 ### v2.3 (Juillet 2026)
-- ✅ Section Tarifs : ajout des colonnes Annuel Mineur (270€), Annuel Ceinture Noire (210€)
-- ✅ Carrousel horizontal natif (scroll-snap) avec flèches et dots
-- ✅ Copyright footer dynamique (année courante)
-- ✅ Restructuration du projet selon les règles AGENTS.md (dossier `Docs/`, scripts dans `scripts/`)
+- ✅ Section Tarifs : 5 colonnes avec carrousel horizontal natif (scroll-snap)
+- ✅ Nouvelles formules : Annuel Mineur (270€), Annuel Ceinture Noire (210€)
+- ✅ Copyright footer dynamique (année courante via JS)
+- ✅ Restructuration du projet selon les règles AGENTS.md (`Docs/`, `scripts/`, `Pages/`)
 - ✅ Diagrammes Mermaid dans `Docs/Architecture.md` et `README.md`
 
 ### v2.2 (Décembre 2025)

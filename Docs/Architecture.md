@@ -147,10 +147,16 @@ erDiagram
 
 ```mermaid
 graph LR
-    subgraph Docker["Docker (docker-compose)"]
-        APP[ajj-app container<br/>Node.js :3000]
-        VOL_DB[(volume: data/)]
-        VOL_UP[(volume: uploads/)]
+    subgraph Build["Multi-stage Build"]
+        B1[Stage 1: node:20-alpine<br/>+ python3 make g++<br/>compiles native modules]
+        B2[Stage 2: node:20-alpine<br/>+ libstdc++ vips only<br/>244 MB final image]
+        B1 -->|COPY node_modules| B2
+    end
+
+    subgraph Container["Docker / Podman"]
+        APP[ajj-app:latest<br/>USER node — non-root<br/>port 3000]
+        VOL_DB[(bind: ./data)]
+        VOL_UP[(bind: ./uploads)]
         APP --- VOL_DB
         APP --- VOL_UP
     end
@@ -163,6 +169,7 @@ graph LR
         ING --> SVC --> DEP --> PV
     end
 
+    B2 --> APP
     Browser -->|HTTPS| ING
     Browser -->|HTTP :3000| APP
 ```

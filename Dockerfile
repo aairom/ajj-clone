@@ -1,41 +1,38 @@
-# Multi-stage build for Node.js application
+# ── Stage 1: build ───────────────────────────────────────────────────────────
+# node:20-alpine already ships python3 / make / g++ via build-base
 FROM node:20-alpine AS builder
 
-# Install build dependencies for better-sqlite3
 RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci --only=production
 
-# Production stage
+# ── Stage 2: runtime ─────────────────────────────────────────────────────────
 FROM node:20-alpine
 
-# Install runtime dependencies
-RUN apk add --no-cache sqlite
+# sharp needs libvips at runtime; better-sqlite3 & bcrypt need libstdc++
+RUN apk add --no-cache libstdc++ vips
 
 WORKDIR /app
 
-# Copy dependencies from builder
+# Copy compiled node_modules from builder stage only
 COPY --from=builder /app/node_modules ./node_modules
 
-# Copy application files
+# Copy application source (no node_modules, no .env, no data — handled by .dockerignore)
 COPY . .
 
-# Create data directory for SQLite database
-RUN mkdir -p /app/data && \
-    chmod 755 /app/data
+# Runtime directories — owned by node user before privilege drop
+RUN mkdir -p /app/data /app/uploads /app/logs \
+    && chown -R node:node /app/data /app/uploads /app/logs
 
-# Expose port
+# Drop privileges — run as node user (uid 1000, built into node:alpine)
+USER node
+
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000/api/health',(r)=>{process.exit(r.statusCode===200?0:1)})"
 
-# Start application
 CMD ["node", "server.js"]
