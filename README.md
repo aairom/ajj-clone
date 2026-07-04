@@ -271,6 +271,13 @@ Logs du serveur : `tail -f server.log`
 
 ## 🔄 Historique des Versions
 
+### v2.3 (Juillet 2026)
+- ✅ Section Tarifs : ajout des colonnes Annuel Mineur (270€), Annuel Ceinture Noire (210€)
+- ✅ Carrousel horizontal natif (scroll-snap) avec flèches et dots
+- ✅ Copyright footer dynamique (année courante)
+- ✅ Restructuration du projet selon les règles AGENTS.md (dossier `Docs/`, scripts dans `scripts/`)
+- ✅ Diagrammes Mermaid dans `Docs/Architecture.md` et `README.md`
+
 ### v2.2 (Décembre 2025)
 - ✅ Éditeur WYSIWYG (Quill.js) pour actualités et événements
 
