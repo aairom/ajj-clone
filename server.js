@@ -59,6 +59,20 @@ app.get('/admin/dashboard.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin', 'dashboard.html'));
 });
 
+// Serve Pages/ sub-pages
+const subPages = [
+    'remise-en-forme',
+    'comite-directeur',
+    'quest-ce-que-le-ju-jitsu',
+    '5-bonnes-raisons',
+    'faq',
+];
+subPages.forEach(page => {
+    app.get(`/Pages/${page}.html`, (req, res) => {
+        res.sendFile(path.join(__dirname, 'Pages', `${page}.html`));
+    });
+});
+
 // Serve main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));

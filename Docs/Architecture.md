@@ -5,7 +5,7 @@
 ```mermaid
 graph TB
     subgraph Client["Client (Browser)"]
-        PUB[Public Pages<br/>index.html, faq.html, …]
+        PUB[Public Pages<br/>index.html<br/>Pages/*.html]
         ADM[Admin Panel<br/>admin/login.html<br/>admin/dashboard.html]
     end
 

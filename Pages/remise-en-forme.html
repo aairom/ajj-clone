@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remise en forme - Asnières Jujitsu</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -12,20 +12,20 @@
     <header>
         <nav class="navbar">
             <div class="container">
-                <a href="index.html#accueil" class="logo">
-                    <img src="_images/cropped-AJJ_Original-2024_vectorise.png" alt="Asnières Jujitsu Logo">
+                <a href="../index.html#accueil" class="logo">
+                    <img src="../_images/cropped-AJJ_Original-2024_vectorise.png" alt="Asnières Jujitsu Logo">
                     <h1>Asnières Jujitsu</h1>
                 </a>
                 <ul class="nav-menu" id="navMenu">
-                    <li><a href="index.html#accueil" class="nav-link">Accueil</a></li>
-                    <li><a href="index.html#actualites" class="nav-link">Actualités</a></li>
-                    <li><a href="index.html#club" class="nav-link">Le Club</a></li>
+                    <li><a href="../index.html#accueil" class="nav-link">Accueil</a></li>
+                    <li><a href="../index.html#actualites" class="nav-link">Actualités</a></li>
+                    <li><a href="../index.html#club" class="nav-link">Le Club</a></li>
                     <li><a href="remise-en-forme.html" class="nav-link active">Remise en forme</a></li>
-                    <li><a href="index.html#horaires" class="nav-link">Horaires</a></li>
-                    <li><a href="index.html#calendrier" class="nav-link">Calendrier</a></li>
-                    <li><a href="index.html#tarifs" class="nav-link">Tarifs</a></li>
-                    <li><a href="index.html#contact" class="nav-link">Contact</a></li>
-                    <li><a href="admin/login.html" class="nav-link admin-link"><i class="fas fa-lock"></i></a></li>
+                    <li><a href="../index.html#horaires" class="nav-link">Horaires</a></li>
+                    <li><a href="../index.html#calendrier" class="nav-link">Calendrier</a></li>
+                    <li><a href="../index.html#tarifs" class="nav-link">Tarifs</a></li>
+                    <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+                    <li><a href="../admin/login.html" class="nav-link admin-link"><i class="fas fa-lock"></i></a></li>
                 </ul>
                 <div class="hamburger" id="hamburger">
                     <span></span>
@@ -79,10 +79,10 @@
                 <div class="footer-section">
                     <h4>Liens Rapides</h4>
                     <ul>
-                        <li><a href="index.html#accueil">Accueil</a></li>
-                        <li><a href="index.html#club">Le Club</a></li>
-                        <li><a href="index.html#horaires">Horaires</a></li>
-                        <li><a href="index.html#contact">Contact</a></li>
+                        <li><a href="../index.html#accueil">Accueil</a></li>
+                        <li><a href="../index.html#club">Le Club</a></li>
+                        <li><a href="../index.html#horaires">Horaires</a></li>
+                        <li><a href="../index.html#contact">Contact</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -104,11 +104,12 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2025 Asnières Jujitsu. Tous droits réservés.</p>
+                <p>&copy; 2025 Asnières Jujitsucopy; <span id="footerYear"></span> Asnières Jujitsu. Tous droits réservés.</p>
             </div>
         </div>
     </footer>
 
-    <script src="js/main.js"></script>
+    <script src="../js/main.js"></script>
+    <script>document.getElementById("footerYear").textContent = new Date().getFullYear();</script>
 </body>
 </html>

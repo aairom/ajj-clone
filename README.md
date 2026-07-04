@@ -100,30 +100,27 @@ sequenceDiagram
 
 ```
 ajj-clone/
+├── index.html              # Page principale (entrée du site)
 ├── server.js               # Serveur Express
 ├── package.json
 ├── .env.example            # Template de configuration
-├── scripts/
-│   ├── START.sh            # Démarrage en mode détaché
-│   ├── STOP.sh             # Arrêt gracieux
-│   └── init-db.js          # Initialisation SQLite
-├── Dockerfile
-├── docker-compose.yml
 │
-├── Docs/                   # Documentation
-│   ├── Architecture.md     # Diagrammes Mermaid
-│   ├── Quickstart.md       # Démarrage rapide
-│   ├── SETUP.md            # Installation détaillée
-│   ├── DOCKER-DEPLOYMENT.md
-│   ├── EMAIL-SETUP.md
-│   ├── IMAGE-UPLOAD-GUIDE.md
-│   ├── FEATURES-ROADMAP.md
-│   └── README-SECURE-LOGIN.md
+├── Pages/                  # Pages publiques secondaires
+│   ├── remise-en-forme.html
+│   ├── comite-directeur.html
+│   ├── quest-ce-que-le-ju-jitsu.html
+│   ├── 5-bonnes-raisons.html
+│   └── faq.html
 │
 ├── admin/                  # Interface admin
 │   ├── login.html / login.js
 │   ├── dashboard.html / dashboard.js
 │   └── admin-style.css
+│
+├── scripts/                # Scripts BASH et utilitaires
+│   ├── START.sh            # Démarrage en mode détaché
+│   ├── STOP.sh             # Arrêt gracieux
+│   └── init-db.js          # Initialisation SQLite
 │
 ├── routes/                 # Routes API
 │   ├── auth.js
@@ -136,16 +133,15 @@ ajj-clone/
 │   ├── auth.js             # Middleware JWT
 │   └── upload.js           # Multer
 │
-├── scripts/
-│   ├── START.sh            # Démarrage en mode détaché
-│   ├── STOP.sh             # Arrêt gracieux
-│   └── init-db.js          # Initialisation SQLite
+├── Docs/                   # Documentation
+│   ├── Architecture.md
+│   ├── Quickstart.md
+│   └── ...
 │
-├── data/                   # Base de données (gitignorée)
-├── uploads/                # Fichiers uploadés (gitignorés)
+├── Dockerfile / docker-compose.yml
 ├── k8s/                    # Manifests Kubernetes
 ├── css/ / js/ / images/    # Assets publics
-└── index.html              # Page principale
+└── data/ / uploads/        # Données (gitignorées)
 ```
 
 ---
