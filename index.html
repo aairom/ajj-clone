@@ -121,38 +121,65 @@
     <section id="tarifs" class="section">
         <div class="container">
             <h2 class="section-title">Tarifs</h2>
-            <div class="pricing-grid">
-                <div class="pricing-card">
-                    <h3>Cours d'Essai</h3>
-                    <div class="price">Gratuit</div>
-                    <ul>
-                        <li>1 séance découverte</li>
-                        <li>Avec ou sans Judo Gi</li>
-                        <li>Sans engagement</li>
-                    </ul>
-                    <a href="#contact" class="btn btn-secondary">Réserver</a>
-                </div>
-                <div class="pricing-card featured">
-                    <h3>Abonnement Annuel</h3>
-                    <div class="price">320€</div>
-                    <ul>
-                        <li>Accès illimité</li>
-                        <li>Tous les cours</li>
-                        <li>Licence incluse</li>
-                    </ul>
-                    <a href="#contact" class="btn btn-primary">S'inscrire</a>
-                </div>
-                <div class="pricing-card">
-                    <h3>Remise en Forme</h3>
-                    <div class="price">180€</div>
-                    <ul>
-                        <li>Accès illimité</li>
-                        <li>Samedi matin</li>
-                        <li>Année scolaire</li>
-                    </ul>
-                    <a href="#contact" class="btn btn-primary">S'inscrire</a>
+            <div class="pricing-nav">
+                <button class="carousel-arrow" id="pricingPrev" aria-label="Précédent">&#8249;</button>
+                <button class="carousel-arrow" id="pricingNext" aria-label="Suivant">&#8250;</button>
+            </div>
+            <div class="pricing-scroll" id="pricingScroll">
+                <div class="pricing-grid" id="pricingGrid">
+                    <div class="pricing-card">
+                        <h3>Cours d'Essai</h3>
+                        <div class="price">Gratuit</div>
+                        <ul>
+                            <li>1 séance découverte</li>
+                            <li>Avec ou sans Judo Gi</li>
+                            <li>Sans engagement</li>
+                        </ul>
+                        <a href="#contact" class="btn btn-secondary">Réserver</a>
+                    </div>
+                    <div class="pricing-card featured">
+                        <h3>Annuel</h3>
+                        <div class="price">320€</div>
+                        <ul>
+                            <li>Accès illimité</li>
+                            <li>Tous les cours</li>
+                            <li>Licence incluse</li>
+                        </ul>
+                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
+                    </div>
+                    <div class="pricing-card featured">
+                        <h3>Mineur</h3>
+                        <div class="price">270€</div>
+                        <ul>
+                            <li>Accès illimité</li>
+                            <li>Tous les cours</li>
+                            <li>Licence incluse</li>
+                        </ul>
+                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
+                    </div>
+                    <div class="pricing-card featured">
+                        <h3>Ceinture Noire</h3>
+                        <div class="price">210€</div>
+                        <ul>
+                            <li>Accès illimité</li>
+                            <li>Tous les cours</li>
+                            <li>Licence incluse</li>
+                        </ul>
+                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
+                    </div>
+                    <div class="pricing-card">
+                        <h3>Remise en Forme</h3>
+                        <div class="price">180€</div>
+                        <ul>
+                            <li>Accès illimité</li>
+                            <li>Samedi matin</li>
+                            <li>Année scolaire</li>
+                        </ul>
+                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
+                    </div>
                 </div>
             </div>
+            <div class="pricing-carousel-dots" id="pricingDots"></div>
         </div>
     </section>
 
@@ -272,5 +299,53 @@
     </div>
 
     <script src="js/main.js"></script>
+    <script>
+    (function () {
+        var scroll  = document.getElementById('pricingScroll');
+        var grid    = document.getElementById('pricingGrid');
+        var prev    = document.getElementById('pricingPrev');
+        var next    = document.getElementById('pricingNext');
+        var dotsEl  = document.getElementById('pricingDots');
+        var cards   = document.querySelectorAll('#pricingGrid .pricing-card');
+
+        if (!scroll || !cards.length) return;
+
+        var CARD_W = 260;   /* matches flex: 0 0 260px in CSS */
+        var GAP    = 24;    /* matches gap: 1.5rem (assuming 16px base) */
+
+        /* ── Build dots ─────────────────────────────────────────── */
+        cards.forEach(function (_, i) {
+            var d = document.createElement('button');
+            d.className = 'dot' + (i === 0 ? ' active' : '');
+            d.setAttribute('aria-label', 'Tarif ' + (i + 1));
+            d.addEventListener('click', function () {
+                scroll.scrollTo({ left: i * (CARD_W + GAP), behavior: 'smooth' });
+            });
+            dotsEl.appendChild(d);
+        });
+
+        /* ── Sync dots & arrows on scroll ───────────────────────── */
+        function sync() {
+            var sl     = scroll.scrollLeft;
+            var idx    = Math.round(sl / (CARD_W + GAP));
+            Array.from(dotsEl.children).forEach(function (d, i) {
+                d.classList.toggle('active', i === idx);
+            });
+            prev.disabled = sl <= 2;
+            next.disabled = sl + scroll.offsetWidth >= scroll.scrollWidth - 2;
+        }
+
+        /* ── Arrow nudge: one card at a time ────────────────────── */
+        prev.addEventListener('click', function () {
+            scroll.scrollBy({ left: -(CARD_W + GAP), behavior: 'smooth' });
+        });
+        next.addEventListener('click', function () {
+            scroll.scrollBy({ left:  (CARD_W + GAP), behavior: 'smooth' });
+        });
+
+        scroll.addEventListener('scroll', sync, { passive: true });
+        sync();
+    })();
+    </script>
 </body>
 </html>
