@@ -14,9 +14,10 @@ A complete secure authentication system has been implemented for the Asnières J
 
 2. **SQLite Database**
    - Local database stored in `data/admin.db`
-   - Tables: users, sessions, news, calendar_events
+   - Tables: users, sessions, news, calendar_events, images, **prices**
    - Foreign key constraints
    - Indexed for performance
+   - `prices` table seeded with 4 default entries on first `init-db`
 
 3. **Secure Authentication**
    - Password hashing with bcrypt (10 rounds)
@@ -37,6 +38,7 @@ A complete secure authentication system has been implemented for the Asnières J
    - Token storage in localStorage
    - Automatic authentication verification
    - Error handling and user feedback
+   - **index.html loads prices dynamically** via `GET /api/prices` (with static fallback)
 
 6. **Security Features**
    - Rate limiting (5 login attempts per 15 min)
@@ -53,17 +55,20 @@ A complete secure authentication system has been implemented for the Asnières J
 ├── server.js                    # Express server
 ├── .env.example                 # Environment template
 ├── .env                         # Environment config (created)
-├── SETUP.md                     # Detailed setup guide
-├── START.sh                     # Quick start script
-├── README-SECURE-LOGIN.md       # This file
+├── Docs/SETUP.md                # Detailed setup guide
+├── scripts/START.sh             # Quick start script
+├── Docs/README-SECURE-LOGIN.md  # This file
 ├── middleware/
-│   └── auth.js                  # JWT authentication middleware
+│   ├── auth.js                  # JWT authentication middleware
+│   └── upload.js                # Multer configuration
 ├── routes/
 │   ├── auth.js                  # Authentication endpoints
 │   ├── news.js                  # News CRUD endpoints
-│   └── calendar.js              # Calendar CRUD endpoints
+│   ├── calendar.js              # Calendar CRUD endpoints
+│   ├── images.js                # Image upload/management endpoints
+│   └── prices.js                # Prices GET (public) / PUT (protected)
 ├── scripts/
-│   └── init-db.js               # Database initialization
+│   └── init-db.js               # Database initialization (includes prices seed)
 └── data/
     └── admin.db                 # SQLite database (created on init)
 ```
@@ -298,6 +303,11 @@ All calendar modification endpoints require authentication.
 - `PUT /api/calendar/:id` - Update event (protected)
 - `DELETE /api/calendar/:id` - Delete event (protected)
 
+### Prices Endpoints
+
+- `GET /api/prices` - Get all price entries **(public — no auth required)**
+- `PUT /api/prices/:id` - Update a price value (requires auth)
+
 ## 🛠️ Development
 
 ### View Database
@@ -313,6 +323,7 @@ SELECT * FROM users;             -- View users
 SELECT * FROM sessions;          -- View active sessions
 SELECT * FROM news;              -- View news
 SELECT * FROM calendar_events;   -- View events
+SELECT * FROM prices;            -- View current prices
 ```
 
 ### Reset Database

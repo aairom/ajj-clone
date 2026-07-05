@@ -103,6 +103,31 @@ db.exec(`
 `);
 console.log('✓ Created images table');
 
+// Prices table
+db.exec(`
+    CREATE TABLE IF NOT EXISTS prices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT UNIQUE NOT NULL,
+        price TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+`);
+console.log('✓ Created prices table');
+
+// Seed default prices if table is empty
+const priceCount = db.prepare('SELECT COUNT(*) as cnt FROM prices').get();
+if (priceCount.cnt === 0) {
+    const insertPrice = db.prepare('INSERT INTO prices (type, price) VALUES (?, ?)');
+    const seedPrices = db.transaction(() => {
+        insertPrice.run('Adulte', '320€');
+        insertPrice.run('Mineur', '270€');
+        insertPrice.run('Ceinture Noire', '210€');
+        insertPrice.run('Remise en forme', '190€');
+    });
+    seedPrices();
+    console.log('✓ Seeded default prices');
+}
+
 // Create indexes for better performance
 db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);

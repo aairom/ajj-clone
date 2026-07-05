@@ -64,9 +64,12 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         const tabId = btn.dataset.tab + 'Tab';
         document.getElementById(tabId).classList.add('active');
         
-        // Load images when Images tab is activated
+        // Load data when specific tabs are activated
         if (btn.dataset.tab === 'images') {
             loadImageGallery();
+        }
+        if (btn.dataset.tab === 'prices') {
+            loadPricesTable();
         }
     });
 });
@@ -655,5 +658,77 @@ document.getElementById('eventDate').value = today;
 
 loadNewsTable();
 loadCalendarTable();
+
+// ==================== PRICES MANAGEMENT ====================
+
+async function loadPricesTable() {
+    const tbody = document.getElementById('pricesTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin"></i> Chargement...</td></tr>';
+
+    try {
+        const response = await fetch(`${API_URL}/prices`);
+        const data = await response.json();
+
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Aucun tarif trouvé</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.data.map(item => `
+            <tr id="price-row-${item.id}">
+                <td><strong>${item.type}</strong></td>
+                <td><span id="price-display-${item.id}">${item.price}</span></td>
+                <td>
+                    <input
+                        type="text"
+                        id="price-input-${item.id}"
+                        value="${item.price}"
+                        placeholder="ex: 350€"
+                        style="padding: 0.4rem 0.7rem; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 0.95rem; width: 120px;"
+                    >
+                </td>
+                <td>
+                    <button class="btn btn-small btn-edit" onclick="savePrice(${item.id})">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load prices error:', error);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 2rem; color: #f44336;">Erreur de chargement</td></tr>';
+    }
+}
+
+async function savePrice(id) {
+    const input = document.getElementById(`price-input-${id}`);
+    const newPrice = input.value.trim();
+
+    if (!newPrice) {
+        showMessage('Le prix ne peut pas être vide', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/prices/${id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ price: newPrice })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Update displayed value in-place
+            document.getElementById(`price-display-${id}`).textContent = newPrice;
+            showMessage(`Tarif mis à jour : ${data.data.type} → ${newPrice}`);
+        } else {
+            showMessage(data.error || 'Erreur lors de la mise à jour', 'error');
+        }
+    } catch (error) {
+        console.error('Save price error:', error);
+        showMessage('Erreur de connexion au serveur', 'error');
+    }
+}
 
 // Made with Bob

@@ -15,9 +15,38 @@ This document outlines the implementation plan for 6 major features:
 
 ---
 
-## 🎯 Phase 1: Foundation & Image Upload (Week 1-2)
+## ✅ Phase 0: Dynamic Prices (Completed — Juillet 2026)
 
-### ✅ Status: IN PROGRESS
+The pricing section (`#tarifs`) on the public site is now driven by a `prices` table in SQLite.
+
+### Database Table
+```sql
+CREATE TABLE IF NOT EXISTS prices (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT UNIQUE NOT NULL,
+    price TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Default seed data
+| id | type | price |
+|----|------|-------|
+| 1 | Adulte | 320€ |
+| 2 | Mineur | 270€ |
+| 3 | Ceinture Noire | 210€ |
+| 4 | Remise en forme | 190€ |
+
+### API
+- `GET /api/prices` — public, returns all rows
+- `PUT /api/prices/:id` — JWT-protected, updates `price` field
+
+### Admin
+New **Tarifs** tab in `admin/dashboard.html`: shows current price, inline input, and "Enregistrer" button per row. Changes are immediately reflected on the public site.
+
+---
+
+## ✅ Phase 1: Foundation & Image Upload (Completed)
 
 ### Database Schema Extensions
 
@@ -371,7 +400,8 @@ CREATE TABLE blog_comments (
 
 | Phase | Feature | Duration | Status |
 |-------|---------|----------|--------|
-| 1 | Image Upload | 2 weeks | 🟡 In Progress |
+| 0 | **Dynamic Prices** (admin + public) | — | ✅ Completed |
+| 1 | Image Upload | 2 weeks | ✅ Completed |
 | 2 | Course Reservation | 2 weeks | ⚪ Pending |
 | 3 | Newsletter | 2 weeks | ⚪ Pending |
 | 4 | Photo Gallery | 1 week | ⚪ Pending |
@@ -445,11 +475,12 @@ CREATE TABLE blog_comments (
 ## 🚀 Next Steps
 
 1. ✅ Review and approve roadmap
-2. 🟡 Complete Phase 1 (Image Upload)
-3. ⚪ Begin Phase 2 (Course Reservation)
-4. ⚪ Iterate based on feedback
+2. ✅ Phase 0 (Dynamic Prices) — completed
+3. ✅ Phase 1 (Image Upload) — completed
+4. ⚪ Begin Phase 2 (Course Reservation)
+5. ⚪ Iterate based on feedback
 
 ---
 
 **Roadmap created by Bob**
-**Last updated:** December 18, 2024
+**Last updated:** Juillet 2026

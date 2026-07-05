@@ -127,56 +127,7 @@
             </div>
             <div class="pricing-scroll" id="pricingScroll">
                 <div class="pricing-grid" id="pricingGrid">
-                    <div class="pricing-card">
-                        <h3>Cours d'Essai</h3>
-                        <div class="price">Gratuit</div>
-                        <ul>
-                            <li>1 séance découverte</li>
-                            <li>Avec ou sans Judo Gi</li>
-                            <li>Sans engagement</li>
-                        </ul>
-                        <a href="#contact" class="btn btn-secondary">Réserver</a>
-                    </div>
-                    <div class="pricing-card featured">
-                        <h3>Adulte</h3>
-                        <div class="price">320€</div>
-                        <ul>
-                            <li>Accès illimité</li>
-                            <li>Tous les cours</li>
-                            <li>Licence incluse</li>
-                        </ul>
-                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
-                    </div>
-                    <div class="pricing-card featured">
-                        <h3>Mineur</h3>
-                        <div class="price">270€</div>
-                        <ul>
-                            <li>Accès illimité</li>
-                            <li>Tous les cours</li>
-                            <li>Licence incluse</li>
-                        </ul>
-                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
-                    </div>
-                    <div class="pricing-card featured">
-                        <h3>Ceinture Noire</h3>
-                        <div class="price">210€</div>
-                        <ul>
-                            <li>Accès illimité</li>
-                            <li>Tous les cours</li>
-                            <li>Licence incluse</li>
-                        </ul>
-                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
-                    </div>
-                    <div class="pricing-card">
-                        <h3>Remise en Forme</h3>
-                        <div class="price">190€</div>
-                        <ul>
-                            <li>Accès illimité</li>
-                            <li>Samedi matin</li>
-                            <li>Année scolaire</li>
-                        </ul>
-                        <a href="#contact" class="btn btn-primary">S'inscrire</a>
-                    </div>
+                    <!-- Pricing cards are loaded dynamically from the API -->
                 </div>
             </div>
             <div class="pricing-carousel-dots" id="pricingDots"></div>
@@ -300,22 +251,24 @@
 
     <script src="js/main.js"></script>
     <script>
-    (function () {
-        document.getElementById('footerYear').textContent = new Date().getFullYear();
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
 
-        var scroll  = document.getElementById('pricingScroll');
-        var grid    = document.getElementById('pricingGrid');
-        var prev    = document.getElementById('pricingPrev');
-        var next    = document.getElementById('pricingNext');
-        var dotsEl  = document.getElementById('pricingDots');
-        var cards   = document.querySelectorAll('#pricingGrid .pricing-card');
+    /* ── Pricing carousel helpers ───────────────────────────────── */
+    var CARD_W = 260;   /* matches flex: 0 0 260px in CSS */
+    var GAP    = 24;    /* matches gap: 1.5rem (assuming 16px base) */
+
+    function initPricingCarousel() {
+        var scroll = document.getElementById('pricingScroll');
+        var prev   = document.getElementById('pricingPrev');
+        var next   = document.getElementById('pricingNext');
+        var dotsEl = document.getElementById('pricingDots');
+        var cards  = document.querySelectorAll('#pricingGrid .pricing-card');
 
         if (!scroll || !cards.length) return;
 
-        var CARD_W = 260;   /* matches flex: 0 0 260px in CSS */
-        var GAP    = 24;    /* matches gap: 1.5rem (assuming 16px base) */
+        /* Clear previous dots */
+        dotsEl.innerHTML = '';
 
-        /* ── Build dots ─────────────────────────────────────────── */
         cards.forEach(function (_, i) {
             var d = document.createElement('button');
             d.className = 'dot' + (i === 0 ? ' active' : '');
@@ -326,10 +279,9 @@
             dotsEl.appendChild(d);
         });
 
-        /* ── Sync dots & arrows on scroll ───────────────────────── */
         function sync() {
-            var sl     = scroll.scrollLeft;
-            var idx    = Math.round(sl / (CARD_W + GAP));
+            var sl  = scroll.scrollLeft;
+            var idx = Math.round(sl / (CARD_W + GAP));
             Array.from(dotsEl.children).forEach(function (d, i) {
                 d.classList.toggle('active', i === idx);
             });
@@ -337,7 +289,6 @@
             next.disabled = sl + scroll.offsetWidth >= scroll.scrollWidth - 2;
         }
 
-        /* ── Arrow nudge: one card at a time ────────────────────── */
         prev.addEventListener('click', function () {
             scroll.scrollBy({ left: -(CARD_W + GAP), behavior: 'smooth' });
         });
@@ -347,7 +298,71 @@
 
         scroll.addEventListener('scroll', sync, { passive: true });
         sync();
-    })();
+    }
+
+    /* Card metadata: static info keyed by type name */
+    var CARD_META = {
+        'Adulte':          { featured: true,  items: ['Accès illimité', 'Tous les cours', 'Licence incluse'],    btn: 'S\'inscrire', btnClass: 'btn-primary' },
+        'Mineur':          { featured: true,  items: ['Accès illimité', 'Tous les cours', 'Licence incluse'],    btn: 'S\'inscrire', btnClass: 'btn-primary' },
+        'Ceinture Noire':  { featured: true,  items: ['Accès illimité', 'Tous les cours', 'Licence incluse'],    btn: 'S\'inscrire', btnClass: 'btn-primary' },
+        'Remise en forme': { featured: false, items: ['Accès illimité', 'Samedi matin', 'Année scolaire'],       btn: 'S\'inscrire', btnClass: 'btn-primary' }
+    };
+
+    function buildPricingCards(prices) {
+        var grid = document.getElementById('pricingGrid');
+
+        /* Static "Cours d'Essai" card always first */
+        var html = '<div class="pricing-card">' +
+            '<h3>Cours d\'Essai</h3>' +
+            '<div class="price">Gratuit</div>' +
+            '<ul>' +
+              '<li>1 séance découverte</li>' +
+              '<li>Avec ou sans Judo Gi</li>' +
+              '<li>Sans engagement</li>' +
+            '</ul>' +
+            '<a href="#contact" class="btn btn-secondary">Réserver</a>' +
+          '</div>';
+
+        prices.forEach(function (p) {
+            var meta = CARD_META[p.type] || { featured: false, items: [], btn: 'S\'inscrire', btnClass: 'btn-primary' };
+            var featuredClass = meta.featured ? ' featured' : '';
+            var listItems = meta.items.map(function (li) { return '<li>' + li + '</li>'; }).join('');
+            html += '<div class="pricing-card' + featuredClass + '">' +
+                '<h3>' + p.type + '</h3>' +
+                '<div class="price">' + p.price + '</div>' +
+                '<ul>' + listItems + '</ul>' +
+                '<a href="#contact" class="btn ' + meta.btnClass + '">' + meta.btn + '</a>' +
+              '</div>';
+        });
+
+        grid.innerHTML = html;
+        initPricingCarousel();
+    }
+
+    /* ── Fetch prices from API ───────────────────────────────────── */
+    fetch('/api/prices')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success && data.data.length) {
+                buildPricingCards(data.data);
+            } else {
+                /* Fallback: show static prices if API fails */
+                buildPricingCards([
+                    { type: 'Adulte',          price: '320€' },
+                    { type: 'Mineur',          price: '270€' },
+                    { type: 'Ceinture Noire',  price: '210€' },
+                    { type: 'Remise en forme', price: '190€' }
+                ]);
+            }
+        })
+        .catch(function () {
+            buildPricingCards([
+                { type: 'Adulte',          price: '320€' },
+                { type: 'Mineur',          price: '270€' },
+                { type: 'Ceinture Noire',  price: '210€' },
+                { type: 'Remise en forme', price: '190€' }
+            ]);
+        });
     </script>
 </body>
 </html>

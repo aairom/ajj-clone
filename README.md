@@ -24,6 +24,7 @@ graph TB
             R_CAL["/api/calendar"]
             R_CONTACT["/api/contact"]
             R_IMG["/api/images"]
+            R_PRC["/api/prices"]
         end
     end
 
@@ -35,9 +36,11 @@ graph TB
     SMTP[Gmail / SMTP<br/>nodemailer]
 
     PUB --> STATIC
+    PUB -->|GET /api/prices| R_PRC
     ADM --> RL --> AUTH_MW
     AUTH_MW --> R_AUTH & R_NEWS & R_CAL & R_CONTACT & R_IMG
-    R_AUTH & R_NEWS & R_CAL & R_IMG --> DB
+    AUTH_MW -.->|PUT protected| R_PRC
+    R_AUTH & R_NEWS & R_CAL & R_IMG & R_PRC --> DB
     R_IMG --> FS
     R_CONTACT --> SMTP
 ```
@@ -75,8 +78,9 @@ sequenceDiagram
 
 ### Site Public
 - Page d'accueil avec présentation du club
-- Actualités dynamiques
-- Horaires, calendrier, tarifs
+- Actualités dynamiques chargées depuis la base de données
+- Horaires, calendrier des événements
+- **Tarifs chargés dynamiquement depuis la base de données** (avec fallback statique)
 - Formulaire de contact
 - Design responsive (mobile / tablette / desktop)
 
@@ -85,6 +89,7 @@ sequenceDiagram
 - Gestion des actualités (WYSIWYG Quill.js)
 - Gestion du calendrier (WYSIWYG Quill.js)
 - Upload d'images (multiple, miniatures automatiques, catégorisation)
+- **Gestion des tarifs** — mise à jour des prix en temps réel depuis l'onglet "Tarifs"
 - Rate limiting, bcrypt, protection CSRF
 
 ### Fonctionnalités Futures
@@ -127,7 +132,8 @@ ajj-clone/
 │   ├── news.js
 │   ├── calendar.js
 │   ├── contact.js
-│   └── images.js
+│   ├── images.js
+│   └── prices.js           # Tarifs (GET public, PUT protégé)
 │
 ├── middleware/
 │   ├── auth.js             # Middleware JWT
@@ -286,6 +292,12 @@ Logs du serveur : `tail -f server.log`
 ---
 
 ## 🔄 Historique des Versions
+
+### v2.5 (Juillet 2026)
+- ✅ **Tarifs dynamiques** — table `prices` en SQLite, chargement API dans `index.html`
+- ✅ **Onglet "Tarifs" dans l'admin** — mise à jour des prix depuis le tableau de bord
+- ✅ Nouveau endpoint `GET /api/prices` (public) et `PUT /api/prices/:id` (protégé)
+- ✅ Seed automatique des 4 tarifs initiaux lors de `npm run init-db`
 
 ### v2.4 (Juillet 2026)
 - ✅ Image Docker/Podman optimisée — multi-stage Alpine, **244 MB** (vs 1.2 GB), non-root

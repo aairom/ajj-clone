@@ -20,6 +20,7 @@ graph TB
             R_CAL["/api/calendar"]
             R_CONTACT["/api/contact"]
             R_IMG["/api/images"]
+            R_PRC["/api/prices"]
         end
     end
 
@@ -33,6 +34,7 @@ graph TB
     end
 
     PUB -->|HTTP| STATIC
+    PUB -->|GET /api/prices public| R_PRC
     ADM -->|HTTP REST| RL
     RL --> AUTH_MW
     AUTH_MW --> R_AUTH
@@ -40,11 +42,13 @@ graph TB
     AUTH_MW --> R_CAL
     AUTH_MW --> R_CONTACT
     AUTH_MW --> R_IMG
+    AUTH_MW -.->|PUT protected| R_PRC
 
     R_AUTH -->|bcrypt + JWT| DB
     R_NEWS --> DB
     R_CAL --> DB
     R_IMG --> DB
+    R_PRC --> DB
     R_IMG --> FS
     R_CONTACT --> SMTP
 ```
@@ -133,6 +137,12 @@ erDiagram
         text category
         int uploaded_by FK
         datetime created_at
+    }
+    PRICES {
+        int id PK
+        text type
+        text price
+        datetime updated_at
     }
 
     USERS ||--o{ SESSIONS : "has"

@@ -56,7 +56,8 @@ npm run init-db
 This will:
 - Create the `data/` directory
 - Create the SQLite database (`admin.db`)
-- Set up all required tables (users, sessions, news, calendar_events)
+- Set up all required tables (users, sessions, news, calendar_events, images, **prices**)
+- Seed the `prices` table with 4 default entries (Adulte, Mineur, Ceinture Noire, Remise en forme)
 - Create the default admin user
 
 **Default Credentials:**
@@ -111,17 +112,20 @@ ajj-clone/
 ├── admin/
 │   ├── login.html          # Login page
 │   ├── login.js            # Login logic (uses API)
-│   ├── dashboard.html      # Admin dashboard
+│   ├── dashboard.html      # Admin dashboard (tabs: Actualités, Calendrier, Images, Tarifs)
 │   ├── dashboard.js        # Dashboard logic (uses API)
 │   └── admin-style.css     # Admin styles
 ├── routes/
 │   ├── auth.js             # Authentication endpoints
 │   ├── news.js             # News CRUD endpoints
-│   └── calendar.js         # Calendar CRUD endpoints
+│   ├── calendar.js         # Calendar CRUD endpoints
+│   ├── images.js           # Image upload/management endpoints
+│   └── prices.js           # Prices GET (public) / PUT (protected)
 ├── middleware/
-│   └── auth.js             # JWT verification middleware
+│   ├── auth.js             # JWT verification middleware
+│   └── upload.js           # Multer configuration
 ├── scripts/
-│   └── init-db.js          # Database initialization
+│   └── init-db.js          # Database initialization (includes prices seed)
 ├── data/
 │   └── admin.db            # SQLite database (created on init)
 ├── server.js               # Express server
@@ -151,6 +155,10 @@ ajj-clone/
 - `POST /api/calendar` - Create event (requires auth)
 - `PUT /api/calendar/:id` - Update event (requires auth)
 - `DELETE /api/calendar/:id` - Delete event (requires auth)
+
+### Prices
+- `GET /api/prices` - Get all price entries **(public)**
+- `PUT /api/prices/:id` - Update a price value (requires auth)
 
 ## 🎯 Usage
 

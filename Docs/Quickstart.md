@@ -118,3 +118,14 @@ podman rm -f ajj-app
 - [`Docs/Architecture.md`](Architecture.md) — system & deployment diagrams
 - [`Docs/SETUP.md`](SETUP.md) — full installation details
 - [`Docs/EMAIL-SETUP.md`](EMAIL-SETUP.md) — configure the contact form
+
+---
+
+## Admin dashboard tabs
+
+| Tab | Description |
+|-----|-------------|
+| Actualités | Créer / modifier / supprimer les articles (Quill WYSIWYG) |
+| Calendrier | Gérer les événements (Quill WYSIWYG) |
+| Images | Upload multiple, miniatures automatiques, catégorisation |
+| **Tarifs** | Mettre à jour les prix affichés sur la page publique |

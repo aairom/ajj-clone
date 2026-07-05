@@ -25,6 +25,7 @@ When working with projects:
    - Always provide a script to shutdown the application gracefully
    - If you find files in the folders which were not made by you, don't delete them
    - When building applications, never hard code the information inside the application (e.g: apiKey, email address, URL...) but provide an ".env.example" file with the variables to be saved as ".env" file to run the application 
+   - Each time a change is done in the project, all documents should be updated adequatrely
 4. **Misc**:
    - On a MacOS platform, don't use the port 5000, it is reserved for the "AirDrop" application
    - Ollama is locally installed
