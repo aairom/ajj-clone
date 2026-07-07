@@ -1,6 +1,6 @@
 // Admin Dashboard JavaScript - Secure Backend Integration
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 // Check authentication
 const authToken = localStorage.getItem('authToken');
@@ -89,6 +89,87 @@ function showMessage(message, type = 'success') {
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
+}
+
+// ==================== IMAGE UPLOAD HELPERS ====================
+
+/**
+ * Upload a File to /api/images/upload-single and return the public path,
+ * or return the URL string directly if no file was chosen.
+ */
+async function resolveImage(fileInput, urlInput) {
+    const file = fileInput.files[0];
+    if (file) {
+        const fd = new FormData();
+        fd.append('image', file);
+        fd.append('category', 'general');
+        const res = await fetch(`${API_URL}/images/upload`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` },
+            body: fd
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Upload échoué');
+        return data.image.path;          // e.g. /uploads/uuid.jpg
+    }
+    return urlInput.value.trim() || '';
+}
+
+function showImagePreview(previewId, imgId, src) {
+    const wrap = document.getElementById(previewId);
+    const img  = document.getElementById(imgId);
+    if (src) {
+        img.src = src;
+        wrap.style.display = 'flex';
+    } else {
+        wrap.style.display = 'none';
+        img.src = '';
+    }
+}
+
+// Wire file inputs → preview + populate URL field
+document.getElementById('newsImageFile').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('newsImage').value = '';   // clear URL field
+        showImagePreview('newsImagePreview', 'newsImagePreviewImg', e.target.result);
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('newsImage').addEventListener('input', function () {
+    document.getElementById('newsImageFile').value = '';   // clear file input
+    showImagePreview('newsImagePreview', 'newsImagePreviewImg', this.value.trim());
+});
+
+document.getElementById('eventImageFile').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('eventImage').value = '';
+        showImagePreview('eventImagePreview', 'eventImagePreviewImg', e.target.result);
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('eventImage').addEventListener('input', function () {
+    document.getElementById('eventImageFile').value = '';
+    showImagePreview('eventImagePreview', 'eventImagePreviewImg', this.value.trim());
+});
+
+function clearNewsImage() {
+    document.getElementById('newsImage').value = '';
+    document.getElementById('newsImageFile').value = '';
+    showImagePreview('newsImagePreview', 'newsImagePreviewImg', '');
+}
+
+function clearEventImage() {
+    document.getElementById('eventImage').value = '';
+    document.getElementById('eventImageFile').value = '';
+    showImagePreview('eventImagePreview', 'eventImagePreviewImg', '');
 }
 
 // ==================== NEWS MANAGEMENT ====================
@@ -184,38 +265,40 @@ async function loadNewsTable() {
 // News form submit
 document.getElementById('newsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // Get content from Quill editor
-    const content = quill.root.innerHTML;
-    
-    const formData = new FormData(e.target);
-    const newsData = {
-        title: formData.get('title'),
-        content: content,
-        date: formData.get('date'),
-        image: formData.get('image') || ''
-    };
-    
+
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    
+
     try {
+        const image = await resolveImage(
+            document.getElementById('newsImageFile'),
+            document.getElementById('newsImage')
+        );
+
+        const newsData = {
+            title: document.getElementById('newsTitle').value,
+            content: quill.root.innerHTML,
+            date: document.getElementById('newsDate').value,
+            image
+        };
+
         const url = editingNewsId ? `${API_URL}/news/${editingNewsId}` : `${API_URL}/news`;
         const method = editingNewsId ? 'PUT' : 'POST';
-        
+
         const response = await fetch(url, {
             method,
             headers: getAuthHeaders(),
             body: JSON.stringify(newsData)
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             showMessage(data.message);
             e.target.reset();
-            quill.setContents([]); // Clear Quill editor
+            quill.setContents([]);
             editingNewsId = null;
+            clearNewsImage();
             document.getElementById('newsSubmitText').textContent = 'Publier';
             document.getElementById('cancelNewsBtn').style.display = 'none';
             loadNewsTable();
@@ -224,7 +307,7 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
         }
     } catch (error) {
         console.error('Save news error:', error);
-        showMessage('Erreur de connexion au serveur', 'error');
+        showMessage(error.message || 'Erreur de connexion au serveur', 'error');
     } finally {
         submitBtn.disabled = false;
     }
@@ -235,18 +318,17 @@ async function editNews(id) {
     try {
         const response = await fetch(`${API_URL}/news/${id}`);
         const data = await response.json();
-        
+
         if (data.success && data.data) {
             const item = data.data;
             editingNewsId = id;
             document.getElementById('newsTitle').value = item.title;
-            
-            // Set Quill editor content
             quill.root.innerHTML = item.content;
             document.getElementById('newsContent').value = item.content;
-            
             document.getElementById('newsDate').value = item.date;
             document.getElementById('newsImage').value = item.image || '';
+            document.getElementById('newsImageFile').value = '';
+            showImagePreview('newsImagePreview', 'newsImagePreviewImg', item.image || '');
             document.getElementById('newsSubmitText').textContent = 'Mettre à jour';
             document.getElementById('cancelNewsBtn').style.display = 'inline-block';
             document.getElementById('newsForm').scrollIntoView({ behavior: 'smooth' });
@@ -261,7 +343,8 @@ async function editNews(id) {
 document.getElementById('cancelNewsBtn').addEventListener('click', () => {
     editingNewsId = null;
     document.getElementById('newsForm').reset();
-    quill.setContents([]); // Clear Quill editor
+    quill.setContents([]);
+    clearNewsImage();
     document.getElementById('newsSubmitText').textContent = 'Publier';
     document.getElementById('cancelNewsBtn').style.display = 'none';
 });
@@ -337,37 +420,40 @@ async function loadCalendarTable() {
 // Calendar form submit
 document.getElementById('calendarForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // Get content from event Quill editor
-    const description = eventQuill.root.innerHTML;
-    
-    const formData = new FormData(e.target);
-    const eventData = {
-        title: formData.get('title'),
-        description: description,
-        date: formData.get('date')
-    };
-    
+
     const submitBtn = e.target.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
-    
+
     try {
+        const image = await resolveImage(
+            document.getElementById('eventImageFile'),
+            document.getElementById('eventImage')
+        );
+
+        const eventData = {
+            title: document.getElementById('eventTitle').value,
+            description: eventQuill.root.innerHTML,
+            date: document.getElementById('eventDate').value,
+            image
+        };
+
         const url = editingEventId ? `${API_URL}/calendar/${editingEventId}` : `${API_URL}/calendar`;
         const method = editingEventId ? 'PUT' : 'POST';
-        
+
         const response = await fetch(url, {
             method,
             headers: getAuthHeaders(),
             body: JSON.stringify(eventData)
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok && data.success) {
             showMessage(data.message);
             e.target.reset();
-            eventQuill.setContents([]); // Clear event Quill editor
+            eventQuill.setContents([]);
             editingEventId = null;
+            clearEventImage();
             document.getElementById('eventSubmitText').textContent = 'Ajouter';
             document.getElementById('cancelEventBtn').style.display = 'none';
             loadCalendarTable();
@@ -376,7 +462,7 @@ document.getElementById('calendarForm').addEventListener('submit', async (e) => 
         }
     } catch (error) {
         console.error('Save event error:', error);
-        showMessage('Erreur de connexion au serveur', 'error');
+        showMessage(error.message || 'Erreur de connexion au serveur', 'error');
     } finally {
         submitBtn.disabled = false;
     }
@@ -387,17 +473,17 @@ async function editEvent(id) {
     try {
         const response = await fetch(`${API_URL}/calendar/${id}`);
         const data = await response.json();
-        
+
         if (data.success && data.data) {
             const event = data.data;
             editingEventId = id;
             document.getElementById('eventTitle').value = event.title;
-            
-            // Set event Quill editor content
             eventQuill.root.innerHTML = event.description;
             document.getElementById('eventDescription').value = event.description;
-            
             document.getElementById('eventDate').value = event.date;
+            document.getElementById('eventImage').value = event.image || '';
+            document.getElementById('eventImageFile').value = '';
+            showImagePreview('eventImagePreview', 'eventImagePreviewImg', event.image || '');
             document.getElementById('eventSubmitText').textContent = 'Mettre à jour';
             document.getElementById('cancelEventBtn').style.display = 'inline-block';
             document.getElementById('calendarForm').scrollIntoView({ behavior: 'smooth' });
@@ -412,7 +498,8 @@ async function editEvent(id) {
 document.getElementById('cancelEventBtn').addEventListener('click', () => {
     editingEventId = null;
     document.getElementById('calendarForm').reset();
-    eventQuill.setContents([]); // Clear event Quill editor
+    eventQuill.setContents([]);
+    clearEventImage();
     document.getElementById('eventSubmitText').textContent = 'Ajouter';
     document.getElementById('cancelEventBtn').style.display = 'none';
 });

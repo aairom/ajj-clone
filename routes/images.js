@@ -183,7 +183,9 @@ router.get('/', authenticateToken, (req, res) => {
         if (category) {
             countQuery += ' WHERE category = ?';
         }
-        const { total } = db.prepare(countQuery).get(category ? category : undefined);
+        const { total } = category
+            ? db.prepare(countQuery).get(category)
+            : db.prepare(countQuery).get();
 
         res.json({
             success: true,

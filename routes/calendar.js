@@ -11,7 +11,7 @@ router.get('/', (req, res) => {
 
     try {
         const events = db.prepare(`
-            SELECT id, title, description, date, created_at, updated_at
+            SELECT id, title, description, date, image, created_at, updated_at
             FROM calendar_events
             ORDER BY date ASC
         `).all();
@@ -33,7 +33,7 @@ router.get('/:id', (req, res) => {
 
     try {
         const event = db.prepare(`
-            SELECT id, title, description, date, created_at, updated_at
+            SELECT id, title, description, date, image, created_at, updated_at
             FROM calendar_events
             WHERE id = ?
         `).get(id);
@@ -54,7 +54,7 @@ router.get('/:id', (req, res) => {
 
 // Create calendar event (protected)
 router.post('/', authenticateToken, requireAdmin, (req, res) => {
-    const { title, description, date } = req.body;
+    const { title, description, date, image } = req.body;
     const userId = req.user.id;
 
     if (!title || !description || !date) {
@@ -65,12 +65,12 @@ router.post('/', authenticateToken, requireAdmin, (req, res) => {
 
     try {
         const result = db.prepare(`
-            INSERT INTO calendar_events (title, description, date, created_by)
-            VALUES (?, ?, ?, ?)
-        `).run(title, description, date, userId);
+            INSERT INTO calendar_events (title, description, date, image, created_by)
+            VALUES (?, ?, ?, ?, ?)
+        `).run(title, description, date, image || null, userId);
 
         const event = db.prepare(`
-            SELECT id, title, description, date, created_at, updated_at
+            SELECT id, title, description, date, image, created_at, updated_at
             FROM calendar_events
             WHERE id = ?
         `).get(result.lastInsertRowid);
@@ -92,7 +92,7 @@ router.post('/', authenticateToken, requireAdmin, (req, res) => {
 // Update calendar event (protected)
 router.put('/:id', authenticateToken, requireAdmin, (req, res) => {
     const { id } = req.params;
-    const { title, description, date } = req.body;
+    const { title, description, date, image } = req.body;
 
     if (!title || !description || !date) {
         return res.status(400).json({ error: 'Title, description, and date are required' });
@@ -103,16 +103,16 @@ router.put('/:id', authenticateToken, requireAdmin, (req, res) => {
     try {
         const result = db.prepare(`
             UPDATE calendar_events
-            SET title = ?, description = ?, date = ?, updated_at = datetime('now')
+            SET title = ?, description = ?, date = ?, image = ?, updated_at = datetime('now')
             WHERE id = ?
-        `).run(title, description, date, id);
+        `).run(title, description, date, image || null, id);
 
         if (result.changes === 0) {
             return res.status(404).json({ error: 'Event not found' });
         }
 
         const event = db.prepare(`
-            SELECT id, title, description, date, created_at, updated_at
+            SELECT id, title, description, date, image, created_at, updated_at
             FROM calendar_events
             WHERE id = ?
         `).get(id);

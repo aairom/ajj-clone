@@ -14,16 +14,16 @@ const pricesRoutes = require('./routes/prices');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Rate limiting
+// Rate limiting — applied to API routes only, not static files
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 500, // 500 API requests per 15 min per IP
     message: 'Too many requests from this IP, please try again later.'
 });
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // Limit each IP to 5 login attempts per windowMs
+    max: 20, // 20 login attempts per 15 min per IP
     message: 'Too many login attempts, please try again later.'
 });
 
@@ -31,21 +31,20 @@ const authLimiter = rateLimit({
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(limiter);
 
-// Serve static files
+// Serve static files BEFORE rate limiter so they don't consume the quota
 app.use(express.static(path.join(__dirname)));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// API Routes
+// API Routes — rate limiter applied only here
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/news', newsRoutes);
-app.use('/api/calendar', calendarRoutes);
-app.use('/api/contact', contactRoutes);
-app.use('/api/images', imagesRoutes);
-app.use('/api/prices', pricesRoutes);
+app.use('/api/news', limiter, newsRoutes);
+app.use('/api/calendar', limiter, calendarRoutes);
+app.use('/api/contact', limiter, contactRoutes);
+app.use('/api/images', limiter, imagesRoutes);
+app.use('/api/prices', limiter, pricesRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

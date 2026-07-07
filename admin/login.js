@@ -1,6 +1,6 @@
 // Admin Login Handler - Secure Backend Authentication
 
-const API_URL = 'http://localhost:3000/api';
+const API_URL = '/api';
 
 document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();

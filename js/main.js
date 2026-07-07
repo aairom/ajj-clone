@@ -209,6 +209,7 @@ function loadCalendar() {
 
             calendarContainer.innerHTML = futureEvents.map(event => `
                 <div class="calendar-event">
+                    ${event.image ? `<img src="${event.image}" alt="${event.title}" class="event-image">` : ''}
                     <div class="event-date">${formatDate(event.date)}</div>
                     <div class="event-title">${event.title}</div>
                     <div class="event-description">${event.description}</div>

@@ -597,6 +597,69 @@
     transition: width 0.3s ease;
 }
 
+/* Image input group (URL + upload button) */
+.image-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.image-input-group input[type="url"] {
+    min-width: 0;
+}
+
+.image-input-sep {
+    color: #999;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.btn-upload-label {
+    white-space: nowrap;
+    cursor: pointer;
+    padding: 0.55rem 1rem;
+    font-size: 0.9rem;
+}
+
+/* Image preview box */
+.image-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+.image-preview img {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.image-preview-remove {
+    background: #f44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.image-preview-remove:hover { background: #d32f2f; }
+
 /* File Input Styling */
 input[type="file"] {
     padding: 0.75rem;
