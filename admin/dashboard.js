@@ -71,6 +71,21 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         if (btn.dataset.tab === 'prices') {
             loadPricesTable();
         }
+        if (btn.dataset.tab === 'newsletter') {
+            loadSubscribersTable();
+            loadCampaignsTable();
+        }
+        if (btn.dataset.tab === 'gallery') {
+            loadAlbumsList();
+        }
+        if (btn.dataset.tab === 'push') {
+            loadPushHistory();
+        }
+        if (btn.dataset.tab === 'blog') {
+            loadBlogPostsTable();
+            loadBlogCommentsTable();
+            loadBlogCategories();
+        }
     });
 });
 
@@ -816,6 +831,722 @@ async function savePrice(id) {
         console.error('Save price error:', error);
         showMessage('Erreur de connexion au serveur', 'error');
     }
+}
+
+// ==================== NEWSLETTER MANAGEMENT ====================
+
+async function loadSubscribersTable() {
+    const tbody = document.getElementById('subscribersTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+    try {
+        const response = await fetch(`${API_URL}/newsletter/subscribers`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#999;">Aucun abonné</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.data.map(s => `
+            <tr>
+                <td>${s.email}</td>
+                <td>${s.name || '-'}</td>
+                <td><span class="status-badge status-${s.status}">${s.status}</span></td>
+                <td>${formatDate(s.subscribed_at)}</td>
+                <td>
+                    <button class="btn btn-small btn-delete" onclick="deleteSubscriber(${s.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load subscribers error:', error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#f44336;">Erreur de chargement</td></tr>';
+    }
+}
+
+function deleteSubscriber(id) {
+    showDeleteModal(async () => {
+        try {
+            const response = await fetch(`${API_URL}/newsletter/subscribers/${id}`, {
+                method: 'DELETE', headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showMessage(data.message);
+                loadSubscribersTable();
+            } else {
+                showMessage(data.error || 'Erreur', 'error');
+            }
+        } catch (e) {
+            showMessage('Erreur de connexion', 'error');
+        }
+    });
+}
+
+// Campaign Quill editor
+const campaignQuill = new Quill('#campaignEditor', {
+    theme: 'snow',
+    modules: { toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        ['link'], ['clean']
+    ]},
+    placeholder: 'Rédigez votre newsletter...'
+});
+campaignQuill.on('text-change', () => {
+    document.getElementById('campaignContent').value = campaignQuill.root.innerHTML;
+});
+
+document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+        const response = await fetch(`${API_URL}/newsletter/campaigns`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                subject: document.getElementById('campaignSubject').value,
+                html_content: campaignQuill.root.innerHTML
+            })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage('Campagne créée');
+            e.target.reset();
+            campaignQuill.setContents([]);
+            loadCampaignsTable();
+        } else {
+            showMessage(data.error || 'Erreur', 'error');
+        }
+    } catch (err) {
+        showMessage('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+
+async function loadCampaignsTable() {
+    const tbody = document.getElementById('campaignsTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+    try {
+        const response = await fetch(`${API_URL}/newsletter/campaigns`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:#999;">Aucune campagne</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.data.map(c => `
+            <tr>
+                <td><strong>${c.subject}</strong></td>
+                <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                <td>${formatDate(c.created_at)}</td>
+                <td>
+                    ${c.status !== 'sent' ? `<button class="btn btn-small btn-edit" onclick="sendCampaign(${c.id})">
+                        <i class="fas fa-paper-plane"></i> Envoyer
+                    </button>` : '<span style="color:#999;font-size:0.85rem;">Envoyée</span>'}
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load campaigns error:', error);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:#f44336;">Erreur de chargement</td></tr>';
+    }
+}
+
+async function sendCampaign(id) {
+    if (!confirm('Envoyer cette campagne à tous les abonnés actifs ?')) return;
+    try {
+        const response = await fetch(`${API_URL}/newsletter/campaigns/${id}/send`, {
+            method: 'POST', headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage(data.message);
+            loadCampaignsTable();
+        } else {
+            showMessage(data.error || 'Erreur lors de l\'envoi', 'error');
+        }
+    } catch (e) {
+        showMessage('Erreur de connexion', 'error');
+    }
+}
+
+// ==================== GALLERY MANAGEMENT ====================
+
+let editingAlbumId = null;
+let imagePickerAlbumId = null;
+let selectedImageIds = new Set();
+
+async function loadAlbumsList() {
+    const container = document.getElementById('albumsList');
+    container.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></div>';
+    try {
+        const response = await fetch(`${API_URL}/gallery/albums-admin`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!data.success || data.data.length === 0) {
+            container.innerHTML = '<p style="color:#999;text-align:center;padding:2rem;">Aucun album</p>';
+            return;
+        }
+        container.innerHTML = data.data.map(album => `
+            <div class="album-admin-item">
+                <div class="album-admin-info">
+                    ${album.cover_thumbnail ? `<img src="${album.cover_thumbnail}" class="album-admin-thumb" alt="">` : '<div class="album-admin-thumb-placeholder"><i class="fas fa-images"></i></div>'}
+                    <div>
+                        <strong>${album.title}</strong>
+                        <div style="font-size:0.85rem;color:#666;">${album.image_count} image(s) · ${album.is_public ? 'Public' : 'Privé'}</div>
+                        ${album.description ? `<div style="font-size:0.85rem;color:#888;">${album.description}</div>` : ''}
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-small" onclick="openImagePicker(${album.id}, '${album.title.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-plus"></i> Images
+                    </button>
+                    <button class="btn btn-small btn-edit" onclick="editAlbum(${album.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-small btn-delete" onclick="deleteAlbum(${album.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Load albums error:', error);
+        container.innerHTML = '<p style="color:#f44336;text-align:center;padding:2rem;">Erreur de chargement</p>';
+    }
+}
+
+document.getElementById('albumForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+        const payload = {
+            title: document.getElementById('albumTitle').value,
+            description: document.getElementById('albumDescription').value,
+            is_public: document.getElementById('albumPublic').checked
+        };
+        const url = editingAlbumId ? `${API_URL}/gallery/albums/${editingAlbumId}` : `${API_URL}/gallery/albums`;
+        const method = editingAlbumId ? 'PUT' : 'POST';
+        const response = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage(editingAlbumId ? 'Album mis à jour' : 'Album créé');
+            e.target.reset();
+            editingAlbumId = null;
+            document.getElementById('albumSubmitText').textContent = 'Créer l\'album';
+            document.getElementById('cancelAlbumBtn').style.display = 'none';
+            loadAlbumsList();
+        } else {
+            showMessage(data.error || 'Erreur', 'error');
+        }
+    } catch (err) {
+        showMessage('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+
+async function editAlbum(id) {
+    try {
+        const response = await fetch(`${API_URL}/gallery/albums-admin`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        const album = data.data.find(a => a.id === id);
+        if (!album) return;
+        editingAlbumId = id;
+        document.getElementById('albumId').value = id;
+        document.getElementById('albumTitle').value = album.title;
+        document.getElementById('albumDescription').value = album.description || '';
+        document.getElementById('albumPublic').checked = album.is_public === 1;
+        document.getElementById('albumSubmitText').textContent = 'Mettre à jour';
+        document.getElementById('cancelAlbumBtn').style.display = 'inline-block';
+        document.getElementById('albumForm').scrollIntoView({ behavior: 'smooth' });
+    } catch (e) {
+        showMessage('Erreur de chargement', 'error');
+    }
+}
+
+document.getElementById('cancelAlbumBtn').addEventListener('click', () => {
+    editingAlbumId = null;
+    document.getElementById('albumForm').reset();
+    document.getElementById('albumSubmitText').textContent = 'Créer l\'album';
+    document.getElementById('cancelAlbumBtn').style.display = 'none';
+});
+
+function deleteAlbum(id) {
+    showDeleteModal(async () => {
+        try {
+            const response = await fetch(`${API_URL}/gallery/albums/${id}`, {
+                method: 'DELETE', headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showMessage(data.message);
+                loadAlbumsList();
+            } else {
+                showMessage(data.error || 'Erreur', 'error');
+            }
+        } catch (e) {
+            showMessage('Erreur de connexion', 'error');
+        }
+    });
+}
+
+async function openImagePicker(albumId, albumTitle) {
+    imagePickerAlbumId = albumId;
+    selectedImageIds.clear();
+    document.getElementById('imagePickerAlbumTitle').textContent = albumTitle;
+    document.getElementById('imagePickerCard').style.display = 'block';
+    document.getElementById('imagePickerCard').scrollIntoView({ behavior: 'smooth' });
+
+    const grid = document.getElementById('imagePickerGrid');
+    grid.innerHTML = '<div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></div>';
+    try {
+        const response = await fetch(`${API_URL}/images?limit=100`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!data.success || data.images.length === 0) {
+            grid.innerHTML = '<p style="color:#999;text-align:center;padding:2rem;">Aucune image disponible. Téléversez d\'abord des images dans l\'onglet Images.</p>';
+            return;
+        }
+        grid.innerHTML = data.images.map(img => `
+            <div class="image-card picker-item" data-id="${img.id}" onclick="toggleImageSelection(this, ${img.id})">
+                <div class="image-thumbnail">
+                    <img src="${img.thumbnail_path}" alt="${img.alt_text || img.original_name}" loading="lazy">
+                    <div class="picker-check"><i class="fas fa-check"></i></div>
+                </div>
+                <div class="image-info">
+                    <div class="image-name" title="${img.original_name}">${img.original_name}</div>
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        grid.innerHTML = '<p style="color:#f44336;text-align:center;">Erreur de chargement</p>';
+    }
+}
+
+function toggleImageSelection(el, id) {
+    if (selectedImageIds.has(id)) {
+        selectedImageIds.delete(id);
+        el.classList.remove('picker-selected');
+    } else {
+        selectedImageIds.add(id);
+        el.classList.add('picker-selected');
+    }
+}
+
+function closeImagePicker() {
+    document.getElementById('imagePickerCard').style.display = 'none';
+    selectedImageIds.clear();
+    imagePickerAlbumId = null;
+}
+
+async function addSelectedImages() {
+    if (!imagePickerAlbumId || selectedImageIds.size === 0) {
+        showMessage('Sélectionnez au moins une image', 'error');
+        return;
+    }
+    try {
+        const response = await fetch(`${API_URL}/gallery/albums/${imagePickerAlbumId}/images`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ image_ids: Array.from(selectedImageIds) })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage(data.message);
+            closeImagePicker();
+            loadAlbumsList();
+        } else {
+            showMessage(data.error || 'Erreur', 'error');
+        }
+    } catch (e) {
+        showMessage('Erreur de connexion', 'error');
+    }
+}
+
+// ==================== PUSH NOTIFICATIONS MANAGEMENT ====================
+
+document.getElementById('pushForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+        const response = await fetch(`${API_URL}/push/send`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                title: document.getElementById('pushTitle').value,
+                body: document.getElementById('pushBody').value,
+                url: document.getElementById('pushUrl').value || '/'
+            })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage(data.message);
+            e.target.reset();
+            document.getElementById('pushUrl').value = '/';
+            loadPushHistory();
+        } else {
+            showMessage(data.error || 'Erreur lors de l\'envoi', 'error');
+        }
+    } catch (err) {
+        showMessage('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+
+async function loadPushHistory() {
+    const tbody = document.getElementById('pushHistoryTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+    try {
+        const response = await fetch(`${API_URL}/push/notifications`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:#999;">Aucune notification envoyée</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.data.map(n => `
+            <tr>
+                <td><strong>${n.title}</strong></td>
+                <td>${n.body}</td>
+                <td>${n.recipient_count}</td>
+                <td>${formatDate(n.sent_at)}</td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load push history error:', error);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:2rem;color:#f44336;">Erreur de chargement</td></tr>';
+    }
+}
+
+// ==================== BLOG MANAGEMENT ====================
+
+let editingBlogPostId = null;
+let blogCategories = [];
+
+// Blog Quill editor
+const blogQuill = new Quill('#blogEditor', {
+    theme: 'snow',
+    modules: { toolbar: [
+        [{ 'header': [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'align': [] }],
+        ['link', 'image'],
+        ['clean']
+    ]},
+    placeholder: 'Rédigez votre article...'
+});
+blogQuill.on('text-change', () => {
+    document.getElementById('blogContent').value = blogQuill.root.innerHTML;
+});
+
+// Blog featured image helpers
+document.getElementById('blogFeaturedImageFile').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('blogFeaturedImage').value = '';
+        showImagePreview('blogImagePreview', 'blogImagePreviewImg', e.target.result);
+    };
+    reader.readAsDataURL(file);
+});
+document.getElementById('blogFeaturedImage').addEventListener('input', function () {
+    document.getElementById('blogFeaturedImageFile').value = '';
+    showImagePreview('blogImagePreview', 'blogImagePreviewImg', this.value.trim());
+});
+function clearBlogImage() {
+    document.getElementById('blogFeaturedImage').value = '';
+    document.getElementById('blogFeaturedImageFile').value = '';
+    showImagePreview('blogImagePreview', 'blogImagePreviewImg', '');
+}
+
+async function loadBlogCategories() {
+    try {
+        const response = await fetch(`${API_URL}/blog/categories`);
+        const data = await response.json();
+        blogCategories = data.success ? data.data : [];
+
+        // Render checkboxes
+        const container = document.getElementById('blogCategoryCheckboxes');
+        container.innerHTML = blogCategories.map(cat => `
+            <label class="cat-checkbox-label">
+                <input type="checkbox" class="blog-cat-cb" value="${cat.id}"> ${cat.name}
+            </label>
+        `).join('');
+
+        // Render categories list in management section
+        const list = document.getElementById('blogCategoriesList');
+        if (blogCategories.length === 0) {
+            list.innerHTML = '<p style="color:#999;">Aucune catégorie</p>';
+        } else {
+            list.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:0.5rem;">' +
+                blogCategories.map(cat => `
+                    <span class="cat-tag">
+                        ${cat.name}
+                        <button onclick="deleteBlogCategory(${cat.id})" title="Supprimer" style="background:none;border:none;cursor:pointer;color:inherit;padding:0 0 0 6px;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </span>
+                `).join('') + '</div>';
+        }
+    } catch (e) {
+        console.error('Load categories error:', e);
+    }
+}
+
+async function createBlogCategory() {
+    const name = document.getElementById('newCategoryName').value.trim();
+    if (!name) { showMessage('Nom de catégorie requis', 'error'); return; }
+    try {
+        const response = await fetch(`${API_URL}/blog/categories`, {
+            method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ name })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage('Catégorie créée');
+            document.getElementById('newCategoryName').value = '';
+            loadBlogCategories();
+        } else {
+            showMessage(data.error || 'Erreur', 'error');
+        }
+    } catch (e) {
+        showMessage('Erreur de connexion', 'error');
+    }
+}
+
+async function deleteBlogCategory(id) {
+    if (!confirm('Supprimer cette catégorie ?')) return;
+    try {
+        const response = await fetch(`${API_URL}/blog/categories/${id}`, {
+            method: 'DELETE', headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage(data.message);
+            loadBlogCategories();
+        } else {
+            showMessage(data.error || 'Erreur', 'error');
+        }
+    } catch (e) {
+        showMessage('Erreur de connexion', 'error');
+    }
+}
+
+document.getElementById('blogPostForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    try {
+        const featured_image = await resolveImage(
+            document.getElementById('blogFeaturedImageFile'),
+            document.getElementById('blogFeaturedImage')
+        );
+
+        const checkedCats = Array.from(document.querySelectorAll('.blog-cat-cb:checked')).map(cb => parseInt(cb.value));
+
+        const payload = {
+            title: document.getElementById('blogTitle').value,
+            excerpt: document.getElementById('blogExcerpt').value,
+            content: blogQuill.root.innerHTML,
+            featured_image,
+            status: document.getElementById('blogStatus').value,
+            category_ids: checkedCats
+        };
+
+        const url = editingBlogPostId ? `${API_URL}/blog/posts/${editingBlogPostId}` : `${API_URL}/blog/posts`;
+        const method = editingBlogPostId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, { method, headers: getAuthHeaders(), body: JSON.stringify(payload) });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            showMessage(editingBlogPostId ? 'Article mis à jour' : 'Article créé');
+            e.target.reset();
+            blogQuill.setContents([]);
+            clearBlogImage();
+            editingBlogPostId = null;
+            document.getElementById('blogFormTitle').textContent = 'Nouvel article';
+            document.getElementById('blogSubmitText').textContent = 'Publier';
+            document.getElementById('cancelBlogBtn').style.display = 'none';
+            loadBlogPostsTable();
+            loadBlogCommentsTable();
+        } else {
+            showMessage(data.error || 'Erreur', 'error');
+        }
+    } catch (err) {
+        console.error('Save blog post error:', err);
+        showMessage(err.message || 'Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+    }
+});
+
+document.getElementById('cancelBlogBtn').addEventListener('click', () => {
+    editingBlogPostId = null;
+    document.getElementById('blogPostForm').reset();
+    blogQuill.setContents([]);
+    clearBlogImage();
+    document.getElementById('blogFormTitle').textContent = 'Nouvel article';
+    document.getElementById('blogSubmitText').textContent = 'Publier';
+    document.getElementById('cancelBlogBtn').style.display = 'none';
+});
+
+async function loadBlogPostsTable() {
+    const tbody = document.getElementById('blogPostsTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+    try {
+        const response = await fetch(`${API_URL}/blog/posts?limit=100`, { headers: getAuthHeaders() });
+        // also load drafts via a separate admin approach — since public API only returns published,
+        // we use the same endpoint but note drafts need a dedicated admin endpoint
+        // For now, show published posts only
+        const data = await response.json();
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#999;">Aucun article</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.data.map(p => `
+            <tr>
+                <td><strong>${p.title}</strong></td>
+                <td><span class="status-badge status-${p.status}">${p.status}</span></td>
+                <td>${p.views}</td>
+                <td>${p.published_at ? formatDate(p.published_at) : '-'}</td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-small btn-edit" onclick="editBlogPost(${p.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-small btn-delete" onclick="deleteBlogPost(${p.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load blog posts error:', error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#f44336;">Erreur de chargement</td></tr>';
+    }
+}
+
+async function editBlogPost(id) {
+    try {
+        // Fetch all published posts to find this one
+        const response = await fetch(`${API_URL}/blog/posts?limit=200`);
+        const data = await response.json();
+        const posts = data.success ? data.data : [];
+        const post = posts.find(p => p.id === id);
+        if (!post) { showMessage('Article introuvable', 'error'); return; }
+
+        editingBlogPostId = id;
+        document.getElementById('blogTitle').value = post.title;
+        document.getElementById('blogExcerpt').value = post.excerpt || '';
+        blogQuill.root.innerHTML = post.content || '';
+        document.getElementById('blogContent').value = post.content || '';
+        document.getElementById('blogFeaturedImage').value = post.featured_image || '';
+        showImagePreview('blogImagePreview', 'blogImagePreviewImg', post.featured_image || '');
+        document.getElementById('blogStatus').value = post.status;
+        document.getElementById('blogFormTitle').textContent = 'Modifier l\'article';
+        document.getElementById('blogSubmitText').textContent = 'Mettre à jour';
+        document.getElementById('cancelBlogBtn').style.display = 'inline-block';
+        document.getElementById('blogPostForm').scrollIntoView({ behavior: 'smooth' });
+    } catch (e) {
+        showMessage('Erreur de chargement', 'error');
+    }
+}
+
+function deleteBlogPost(id) {
+    showDeleteModal(async () => {
+        try {
+            const response = await fetch(`${API_URL}/blog/posts/${id}`, {
+                method: 'DELETE', headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showMessage(data.message);
+                loadBlogPostsTable();
+            } else {
+                showMessage(data.error || 'Erreur', 'error');
+            }
+        } catch (e) {
+            showMessage('Erreur de connexion', 'error');
+        }
+    });
+}
+
+async function loadBlogCommentsTable() {
+    const tbody = document.getElementById('blogCommentsTableBody');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>';
+    try {
+        const response = await fetch(`${API_URL}/blog/comments`, { headers: getAuthHeaders() });
+        const data = await response.json();
+        if (!data.success || data.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#999;">Aucun commentaire</td></tr>';
+            return;
+        }
+        tbody.innerHTML = data.data.map(c => `
+            <tr>
+                <td><a href="/Pages/blog-post.html?slug=${c.post_slug}" target="_blank" style="color:var(--accent-color)">${c.post_title}</a></td>
+                <td>${c.author_name}</td>
+                <td>${c.content.substring(0, 80)}${c.content.length > 80 ? '...' : ''}</td>
+                <td>${formatDate(c.created_at)}</td>
+                <td>
+                    <div class="action-buttons">
+                        ${c.status === 'pending' ? `<button class="btn btn-small btn-edit" onclick="approveBlogComment(${c.id})">
+                            <i class="fas fa-check"></i> Approuver
+                        </button>` : '<span style="color:#4caf50;font-size:0.85rem;"><i class="fas fa-check-circle"></i> Approuvé</span>'}
+                        <button class="btn btn-small btn-delete" onclick="deleteBlogComment(${c.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    } catch (error) {
+        console.error('Load comments error:', error);
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#f44336;">Erreur de chargement</td></tr>';
+    }
+}
+
+async function approveBlogComment(id) {
+    try {
+        const response = await fetch(`${API_URL}/blog/comments/${id}/approve`, {
+            method: 'PUT', headers: getAuthHeaders()
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+            showMessage(data.message);
+            loadBlogCommentsTable();
+        } else {
+            showMessage(data.error || 'Erreur', 'error');
+        }
+    } catch (e) {
+        showMessage('Erreur de connexion', 'error');
+    }
+}
+
+function deleteBlogComment(id) {
+    showDeleteModal(async () => {
+        try {
+            const response = await fetch(`${API_URL}/blog/comments/${id}`, {
+                method: 'DELETE', headers: getAuthHeaders()
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                showMessage(data.message);
+                loadBlogCommentsTable();
+            } else {
+                showMessage(data.error || 'Erreur', 'error');
+            }
+        } catch (e) {
+            showMessage('Erreur de connexion', 'error');
+        }
+    });
 }
 
 // Made with Bob

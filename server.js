@@ -10,6 +10,10 @@ const calendarRoutes = require('./routes/calendar');
 const contactRoutes = require('./routes/contact');
 const imagesRoutes = require('./routes/images');
 const pricesRoutes = require('./routes/prices');
+const newsletterRoutes = require('./routes/newsletter');
+const galleryRoutes = require('./routes/gallery');
+const pushRoutes = require('./routes/push');
+const blogRoutes = require('./routes/blog');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,6 +49,10 @@ app.use('/api/calendar', limiter, calendarRoutes);
 app.use('/api/contact', limiter, contactRoutes);
 app.use('/api/images', limiter, imagesRoutes);
 app.use('/api/prices', limiter, pricesRoutes);
+app.use('/api/newsletter', limiter, newsletterRoutes);
+app.use('/api/gallery', limiter, galleryRoutes);
+app.use('/api/push', limiter, pushRoutes);
+app.use('/api/blog', limiter, blogRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -67,6 +75,8 @@ const subPages = [
     'quest-ce-que-le-ju-jitsu',
     '5-bonnes-raisons',
     'faq',
+    'blog',
+    'blog-post',
 ];
 subPages.forEach(page => {
     app.get(`/Pages/${page}.html`, (req, res) => {

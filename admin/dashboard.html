@@ -57,6 +57,22 @@
                         <i class="fas fa-tags"></i>
                         Tarifs
                     </button>
+                    <button class="tab-btn" data-tab="newsletter">
+                        <i class="fas fa-envelope"></i>
+                        Newsletter
+                    </button>
+                    <button class="tab-btn" data-tab="gallery">
+                        <i class="fas fa-photo-video"></i>
+                        Galerie
+                    </button>
+                    <button class="tab-btn" data-tab="push">
+                        <i class="fas fa-bell"></i>
+                        Notifications
+                    </button>
+                    <button class="tab-btn" data-tab="blog">
+                        <i class="fas fa-blog"></i>
+                        Blog
+                    </button>
                 </div>
 
                 <!-- News Tab -->
@@ -287,6 +303,223 @@
                                 </thead>
                                 <tbody id="pricesTableBody">
                                     <!-- Prices will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Newsletter Tab -->
+                <div id="newsletterTab" class="tab-content">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-user-plus"></i> Abonnés</h3>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr><th>Email</th><th>Nom</th><th>Statut</th><th>Date</th><th>Action</th></tr>
+                                </thead>
+                                <tbody id="subscribersTableBody">
+                                    <tr><td colspan="5" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-plus-circle"></i> Créer une campagne</h3>
+                        <form id="campaignForm" class="admin-form">
+                            <div class="form-group">
+                                <label for="campaignSubject">Sujet *</label>
+                                <input type="text" id="campaignSubject" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Contenu *</label>
+                                <div id="campaignEditor" style="min-height:200px;background:white;"></div>
+                                <input type="hidden" id="campaignContent">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-list"></i> Campagnes</h3>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr><th>Sujet</th><th>Statut</th><th>Créée le</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="campaignsTableBody">
+                                    <tr><td colspan="4" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gallery Tab -->
+                <div id="galleryTab" class="tab-content">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-plus-circle"></i> Créer un album</h3>
+                        <form id="albumForm" class="admin-form">
+                            <input type="hidden" id="albumId">
+                            <div class="form-group">
+                                <label for="albumTitle">Titre *</label>
+                                <input type="text" id="albumTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="albumDescription">Description</label>
+                                <textarea id="albumDescription" rows="2"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="albumPublic" checked>
+                                    Album public
+                                </label>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancelAlbumBtn" class="btn btn-secondary" style="display:none;">Annuler</button>
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <span id="albumSubmitText">Créer l'album</span></button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-list"></i> Albums</h3>
+                        <div id="albumsList" class="albums-admin-list">
+                            <div style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></div>
+                        </div>
+                    </div>
+                    <!-- Image picker for album -->
+                    <div id="imagePickerCard" class="admin-card" style="display:none;">
+                        <h3><i class="fas fa-images"></i> Ajouter des images à l'album : <span id="imagePickerAlbumTitle"></span></h3>
+                        <p style="color:#666;margin-bottom:1rem;">Sélectionnez les images à ajouter, puis cliquez sur "Ajouter la sélection".</p>
+                        <div id="imagePickerGrid" class="image-gallery"></div>
+                        <div class="form-actions" style="margin-top:1rem;">
+                            <button type="button" class="btn btn-secondary" onclick="closeImagePicker()">Fermer</button>
+                            <button type="button" class="btn btn-primary" onclick="addSelectedImages()"><i class="fas fa-plus"></i> Ajouter la sélection</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Push Notifications Tab -->
+                <div id="pushTab" class="tab-content">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-paper-plane"></i> Envoyer une notification push</h3>
+                        <form id="pushForm" class="admin-form">
+                            <div class="form-group">
+                                <label for="pushTitle">Titre *</label>
+                                <input type="text" id="pushTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="pushBody">Message *</label>
+                                <textarea id="pushBody" rows="3" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="pushUrl">URL de destination</label>
+                                <input type="text" id="pushUrl" placeholder="/" value="/">
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-bell"></i> Envoyer à tous</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-history"></i> Historique des notifications</h3>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr><th>Titre</th><th>Message</th><th>Destinataires</th><th>Envoyée le</th></tr>
+                                </thead>
+                                <tbody id="pushHistoryTableBody">
+                                    <tr><td colspan="4" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Blog Tab -->
+                <div id="blogTab" class="tab-content">
+                    <div class="admin-card">
+                        <h3><i class="fas fa-plus-circle"></i> <span id="blogFormTitle">Nouvel article</span></h3>
+                        <form id="blogPostForm" class="admin-form">
+                            <input type="hidden" id="blogPostId">
+                            <div class="form-group">
+                                <label for="blogTitle">Titre *</label>
+                                <input type="text" id="blogTitle" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="blogExcerpt">Résumé</label>
+                                <textarea id="blogExcerpt" rows="2" placeholder="Court résumé de l'article..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Contenu *</label>
+                                <div id="blogEditor" style="min-height:250px;background:white;"></div>
+                                <input type="hidden" id="blogContent">
+                            </div>
+                            <div class="form-group">
+                                <label>Image à la une</label>
+                                <div class="image-input-group">
+                                    <input type="url" id="blogFeaturedImage" placeholder="https://..." style="flex:1;">
+                                    <span class="image-input-sep">ou</span>
+                                    <label class="btn btn-secondary btn-upload-label" for="blogFeaturedImageFile">
+                                        <i class="fas fa-upload"></i> Téléverser
+                                    </label>
+                                    <input type="file" id="blogFeaturedImageFile" accept="image/*" style="display:none;">
+                                </div>
+                                <div id="blogImagePreview" class="image-preview" style="display:none;">
+                                    <img id="blogImagePreviewImg" src="" alt="Aperçu">
+                                    <button type="button" class="image-preview-remove" onclick="clearBlogImage()"><i class="fas fa-times"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="blogStatus">Statut</label>
+                                <select id="blogStatus">
+                                    <option value="draft">Brouillon</option>
+                                    <option value="published">Publié</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Catégories</label>
+                                <div id="blogCategoryCheckboxes" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;"></div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancelBlogBtn" class="btn btn-secondary" style="display:none;">Annuler</button>
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <span id="blogSubmitText">Publier</span></button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-tags"></i> Catégories</h3>
+                        <div style="display:flex;gap:1rem;align-items:flex-end;margin-bottom:1rem;">
+                            <div class="form-group" style="margin:0;flex:1;">
+                                <input type="text" id="newCategoryName" placeholder="Nom de la catégorie">
+                            </div>
+                            <button class="btn btn-primary" onclick="createBlogCategory()"><i class="fas fa-plus"></i> Ajouter</button>
+                        </div>
+                        <div id="blogCategoriesList"></div>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-list"></i> Articles</h3>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr><th>Titre</th><th>Statut</th><th>Vues</th><th>Date</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="blogPostsTableBody">
+                                    <tr><td colspan="5" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="admin-card">
+                        <h3><i class="fas fa-comments"></i> Commentaires en attente</h3>
+                        <div class="data-table">
+                            <table>
+                                <thead>
+                                    <tr><th>Article</th><th>Auteur</th><th>Commentaire</th><th>Date</th><th>Actions</th></tr>
+                                </thead>
+                                <tbody id="blogCommentsTableBody">
+                                    <tr><td colspan="5" style="text-align:center;padding:2rem;"><i class="fas fa-spinner fa-spin"></i></td></tr>
                                 </tbody>
                             </table>
                         </div>

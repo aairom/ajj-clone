@@ -6,7 +6,7 @@ metadata:
   labels:
     app: ajj-app
 spec:
-  replicas: 2
+  replicas: 1
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -77,6 +77,8 @@ spec:
         volumeMounts:
         - name: sqlite-storage
           mountPath: /app/data
+        - name: uploads-storage
+          mountPath: /app/uploads
         resources:
           requests:
             memory: "256Mi"
@@ -104,6 +106,9 @@ spec:
       - name: sqlite-storage
         persistentVolumeClaim:
           claimName: ajj-sqlite-pvc
+      - name: uploads-storage
+        persistentVolumeClaim:
+          claimName: ajj-uploads-pvc
       restartPolicy: Always
 
 # Made with Bob

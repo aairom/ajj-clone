@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog - Asnières Jujitsu</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: var(--white);
+            padding: 120px 20px 60px;
+            text-align: center;
+            margin-top: 70px;
+        }
+        .page-header h2 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .page-header p { opacity: 0.8; }
+
+        .blog-layout {
+            max-width: 1100px;
+            margin: 3rem auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 3rem;
+            align-items: start;
+        }
+        @media (max-width: 768px) {
+            .blog-layout { grid-template-columns: 1fr; }
+        }
+
+        .blog-list { display: flex; flex-direction: column; gap: 2rem; }
+
+        .blog-card {
+            background: var(--white);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 0;
+            transition: transform 0.3s;
+        }
+        .blog-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+        @media (max-width: 640px) { .blog-card { grid-template-columns: 1fr; } }
+
+        .blog-card-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .blog-card-img-placeholder {
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+            background: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #ccc;
+        }
+        .blog-card-body {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .blog-card-meta {
+            color: var(--gray);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+        .blog-card-body h2 {
+            font-size: 1.3rem;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+        }
+        .blog-card-body h2 a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .blog-card-body h2 a:hover { color: var(--accent-color); }
+        .blog-card-body p {
+            color: var(--gray);
+            flex: 1;
+            line-height: 1.7;
+        }
+        .blog-card-footer {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .blog-read-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .blog-read-link:hover { text-decoration: underline; }
+        .blog-card-views { font-size: 0.82rem; color: var(--gray); }
+
+        .blog-cat-badge {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            margin-right: 0.3rem;
+        }
+
+        /* Sidebar */
+        .blog-sidebar { position: sticky; top: 100px; }
+        .sidebar-card {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 1.5rem;
+        }
+        .sidebar-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.5rem;
+        }
+        .cat-list { list-style: none; }
+        .cat-list li { margin-bottom: 0.4rem; }
+        .cat-list a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+        .cat-list a:hover { color: var(--accent-color); }
+        .cat-list a.active { color: var(--accent-color); font-weight: 600; }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: var(--white);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .pagination button.active, .pagination button:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        .pagination button:disabled { opacity: 0.4; cursor: default; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="container">
+                <a href="../index.html#accueil" class="logo">
+                    <img src="../_images/cropped-AJJ_Original-2024_vectorise.png" alt="Asnières Jujitsu Logo">
+                    <h1>Asnières Jujitsu</h1>
+                </a>
+                <ul class="nav-menu" id="navMenu">
+                    <li><a href="../index.html#accueil" class="nav-link">Accueil</a></li>
+                    <li><a href="../index.html#actualites" class="nav-link">Actualités</a></li>
+                    <li><a href="../index.html#club" class="nav-link">Le Club</a></li>
+                    <li><a href="../index.html#calendrier" class="nav-link">Calendrier</a></li>
+                    <li><a href="../index.html#galerie" class="nav-link">Galerie</a></li>
+                    <li><a href="blog.html" class="nav-link active">Blog</a></li>
+                    <li><a href="../index.html#contact" class="nav-link">Contact</a></li>
+                </ul>
+                <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2><i class="fas fa-blog"></i> Blog</h2>
+        <p>Articles, actualités et conseils du club Asnières Jujitsu</p>
+    </div>
+
+    <div class="blog-layout">
+        <!-- Posts list -->
+        <main>
+            <div id="blogPostsList" class="blog-list">
+                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Chargement...</p></div>
+            </div>
+            <div id="blogPagination" class="pagination"></div>
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="blog-sidebar">
+            <div class="sidebar-card">
+                <h3><i class="fas fa-tags"></i> Catégories</h3>
+                <ul id="sidebarCategories" class="cat-list">
+                    <li><a href="blog.html" class="active">Toutes</a></li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Asnières Jujitsu</h4>
+                    <p>Club de Jujitsu Traditionnel</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="../index.html#contact">Contact</a></li>
+                        <li><a href="../admin/login.html">Admin</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="footerYear"></span> Asnières Jujitsu. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+    const LIMIT = 6;
+    let currentPage = 0;
+    let currentCategory = '';
+
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('navMenu');
+    if (hamburger) hamburger.addEventListener('click', () => navMenu.classList.toggle('active'));
+
+    function formatDate(d) {
+        if (!d) return '';
+        return new Date(d).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    async function loadPosts(page, category) {
+        const container = document.getElementById('blogPostsList');
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Chargement...</p></div>';
+        const offset = page * LIMIT;
+        let url = `/api/blog/posts?limit=${LIMIT}&offset=${offset}`;
+        if (category) url += `&category=${encodeURIComponent(category)}`;
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            const posts = data.success ? data.data : [];
+            const total = data.total || 0;
+
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-blog"></i><p>Aucun article trouvé.</p></div>';
+                document.getElementById('blogPagination').innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = posts.map(p => `
+                <article class="blog-card">
+                    ${p.featured_image
+                        ? `<img src="${p.featured_image}" alt="${p.title}" class="blog-card-img">`
+                        : '<div class="blog-card-img-placeholder"><i class="fas fa-blog"></i></div>'}
+                    <div class="blog-card-body">
+                        <div class="blog-card-meta">
+                            <span><i class="fas fa-calendar-alt"></i> ${formatDate(p.published_at)}</span>
+                            <span><i class="fas fa-user"></i> ${p.author_name || 'Admin'}</span>
+                        </div>
+                        <h2><a href="blog-post.html?slug=${p.slug}">${p.title}</a></h2>
+                        <p>${p.excerpt || ''}</p>
+                        <div class="blog-card-footer">
+                            <a href="blog-post.html?slug=${p.slug}" class="blog-read-link">Lire la suite →</a>
+                            <span class="blog-card-views"><i class="fas fa-eye"></i> ${p.views}</span>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+
+            // Pagination
+            const totalPages = Math.ceil(total / LIMIT);
+            const pag = document.getElementById('blogPagination');
+            pag.innerHTML = '';
+            if (totalPages > 1) {
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '← Précédent';
+                prevBtn.disabled = page === 0;
+                prevBtn.addEventListener('click', () => { currentPage--; loadPosts(currentPage, currentCategory); });
+                pag.appendChild(prevBtn);
+
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = 'Suivant →';
+                nextBtn.disabled = page >= totalPages - 1;
+                nextBtn.addEventListener('click', () => { currentPage++; loadPosts(currentPage, currentCategory); });
+                pag.appendChild(nextBtn);
+            }
+        } catch (e) {
+            container.innerHTML = '<div class="empty-state"><i class="fas fa-blog"></i><p>Impossible de charger les articles.</p></div>';
+        }
+    }
+
+    async function loadCategories() {
+        try {
+            const resp = await fetch('/api/blog/categories');
+            const data = await resp.json();
+            const cats = data.success ? data.data : [];
+            const ul = document.getElementById('sidebarCategories');
+            const params = new URLSearchParams(location.search);
+            const activeCat = params.get('category') || '';
+            ul.innerHTML = `<li><a href="blog.html" class="${!activeCat ? 'active' : ''}">Toutes</a></li>` +
+                cats.map(c => `<li><a href="blog.html?category=${c.slug}" class="${activeCat === c.slug ? 'active' : ''}">${c.name}</a></li>`).join('');
+        } catch (e) {}
+    }
+
+    // Read category from URL
+    const params = new URLSearchParams(location.search);
+    currentCategory = params.get('category') || '';
+    loadPosts(0, currentCategory);
+    loadCategories();
+    </script>
+</body>
+</html>

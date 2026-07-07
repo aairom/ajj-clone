@@ -23,6 +23,8 @@
                     <li><a href="Pages/remise-en-forme.html" class="nav-link">Remise en forme</a></li>
                     <li><a href="#horaires" class="nav-link">Horaires</a></li>
                     <li><a href="#calendrier" class="nav-link">Calendrier</a></li>
+                    <li><a href="#galerie" class="nav-link">Galerie</a></li>
+                    <li><a href="Pages/blog.html" class="nav-link">Blog</a></li>
                     <li><a href="#tarifs" class="nav-link">Tarifs</a></li>
                     <li><a href="#contact" class="nav-link">Contact</a></li>
                     <li><a href="admin/login.html" class="nav-link admin-link"><i class="fas fa-lock"></i></a></li>
@@ -148,6 +150,56 @@
         </div>
     </section>
 
+    <!-- Galerie Section -->
+    <section id="galerie" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Galerie Photos</h2>
+            <div id="galerieContainer" class="galerie-grid">
+                <!-- Albums will be loaded dynamically -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox for gallery -->
+    <div id="galleryLightbox" class="gallery-lightbox" style="display:none;" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <button class="lightbox-prev" onclick="lightboxNav(-1, event)">&#8249;</button>
+        <button class="lightbox-next" onclick="lightboxNav(1, event)">&#8250;</button>
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <img id="lightboxImg" src="" alt="">
+            <p id="lightboxCaption"></p>
+        </div>
+    </div>
+
+    <!-- Blog Section -->
+    <section id="blog" class="section">
+        <div class="container">
+            <h2 class="section-title">Blog</h2>
+            <div id="blogPreviewContainer" class="blog-preview-grid">
+                <!-- Latest posts loaded dynamically -->
+            </div>
+            <div style="text-align:center;margin-top:2rem;">
+                <a href="Pages/blog.html" class="btn btn-secondary">Voir tous les articles</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section id="newsletter" class="section bg-light">
+        <div class="container">
+            <h2 class="section-title">Newsletter</h2>
+            <div class="newsletter-wrapper">
+                <p class="newsletter-desc">Restez informé de nos actualités, événements et résultats. Inscrivez-vous à notre newsletter !</p>
+                <form id="newsletterForm" class="newsletter-form">
+                    <input type="text" id="nlName" placeholder="Votre nom (optionnel)">
+                    <input type="email" id="nlEmail" placeholder="Votre email *" required>
+                    <button type="submit" class="btn btn-primary">S'inscrire</button>
+                </form>
+                <div id="newsletterMsg" class="newsletter-msg" style="display:none;"></div>
+            </div>
+        </div>
+    </section>
+
     <!-- Contact Section -->
     <section id="contact" class="section">
         <div class="container">
@@ -222,6 +274,14 @@
                     </ul>
                 </div>
                 <div class="footer-section">
+                    <h4>Plus de contenu</h4>
+                    <ul>
+                        <li><a href="Pages/blog.html">Blog</a></li>
+                        <li><a href="#galerie">Galerie Photos</a></li>
+                        <li><a href="#newsletter">Newsletter</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
                     <h4>Suivez-nous</h4>
                     <div class="social-links">
                         <a href="https://www.facebook.com/asnieresjujitsu/"><i class="fab fa-facebook"></i></a>
@@ -244,6 +304,11 @@
             </div>
         </div>
     </footer>
+
+    <!-- Push Notification button -->
+    <button id="pushNotifBtn" class="push-notif-btn" title="Recevoir les notifications" style="display:none;">
+        🔔
+    </button>
 
     <!-- Registration Modal -->
     <div id="registrationModal" class="modal">
