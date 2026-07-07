@@ -30,7 +30,8 @@ Key packages installed:
 - `jsonwebtoken` — JWT authentication
 - `express-rate-limit` — API rate limiting
 - `multer` + `sharp` + `uuid` — image upload & processing
-- `nodemailer` — contact form emails
+- `nodemailer` — contact form emails + newsletter campaigns
+- `web-push` — Web Push API (VAPID) for push notifications
 - `dotenv` — environment variables
 
 ### 2 — Configure environment
@@ -77,6 +78,16 @@ Creates `data/admin.db` with tables:
 | `calendar_events` | Événements (title, description, date, image) |
 | `images` | Uploaded image metadata |
 | `prices` | Tarifs (seeded with 4 default entries) |
+| `newsletter_subscribers` | Email subscribers with token + status |
+| `newsletter_campaigns` | Campaign subject + HTML content |
+| `gallery_albums` | Photo albums (title, description, is_public) |
+| `album_images` | Junction: album ↔ image with caption + order |
+| `push_subscriptions` | Browser push subscription objects (VAPID) |
+| `push_notifications` | Push notification history |
+| `blog_posts` | Articles (title, slug, content, status, views) |
+| `blog_categories` | Category name + slug |
+| `post_categories` | Junction: post ↔ category |
+| `blog_comments` | Comments with pending/approved moderation |
 
 > **Existing DB from before v3.0?** The `calendar_events.image` column may be missing. Add it:
 > ```bash

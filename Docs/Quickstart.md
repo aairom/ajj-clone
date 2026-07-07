@@ -117,20 +117,26 @@ podman rm -f ajj-app
 
 | Tab | Description |
 |-----|-------------|
-| **Actualités** | Créer / modifier / supprimer les articles (Quill WYSIWYG) + image par URL ou upload direct |
-| **Calendrier** | Gérer les événements (Quill WYSIWYG) + image par URL ou upload direct |
-| **Images** | Upload multiple, miniatures automatiques (Sharp), catégorisation, galerie |
+| **Actualités** | Créer / modifier / supprimer les articles (Quill WYSIWYG) + image |
+| **Calendrier** | Gérer les événements (Quill WYSIWYG) + image |
+| **Images** | Upload multiple, miniatures automatiques, catégorisation, galerie |
 | **Tarifs** | Mettre à jour les prix affichés sur la page publique |
+| **Newsletter** | Gérer les abonnés, créer et envoyer des campagnes email |
+| **Galerie** | Créer des albums, y ajouter des images depuis la médiathèque |
+| **Notifications** | Envoyer des notifications push à tous les abonnés + historique |
+| **Blog** | Créer/modifier des articles, gérer les catégories, modérer les commentaires |
 
-### Ajouter une image à une actualité ou un événement
+---
 
-Dans les onglets **Actualités** et **Calendrier**, le champ Image propose deux options :
+## Activer les notifications push
 
-1. **URL externe** — coller un lien direct vers une image hébergée ailleurs
-2. **Téléverser** — cliquer sur le bouton "Téléverser" pour choisir un fichier local ;  
-   l'image est uploadée via `/api/images/upload`, stockée dans `uploads/`, et son chemin est enregistré automatiquement.
-
-Un aperçu s'affiche immédiatement. Le bouton ✕ efface la sélection.
+1. Générer les clés VAPID :
+   ```bash
+   node scripts/generate-vapid.js
+   ```
+2. Les clés sont automatiquement ajoutées au fichier `.env`
+3. Redémarrer le serveur
+4. Un bouton 🔔 apparaît sur le site public pour les visiteurs
 
 ---
 
@@ -143,4 +149,4 @@ Un aperçu s'affiche immédiatement. Le bouton ✕ efface la sélection.
 
 ---
 
-*Made with ❤️ by Bob — last updated Juillet 2026 (v3.0)*
+*Made with ❤️ by Bob — last updated Juillet 2026 (v4.0)*

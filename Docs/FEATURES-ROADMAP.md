@@ -4,6 +4,23 @@
 
 ## ✅ Completed
 
+### v4.0 — Newsletter, Galerie, Push Notifications, Blog (Juillet 2026)
+
+- **Newsletter** — Formulaire public d'abonnement + page admin complète (abonnés, campagnes, envoi Quill WYSIWYG via nodemailer)
+- **Galerie photos** — Albums publics avec lightbox + gestion admin des albums + sélecteur d'images existantes
+- **Notifications Push** — Service Worker (`sw.js`), abonnement/désabonnement public, envoi admin via Web Push API (VAPID), historique
+- **Blog** — Articles avec slug, catégories, statut draft/publié, vues, prévisualisation homepage ; pages publiques `Pages/blog.html` et `Pages/blog-post.html` ; commentaires avec modération admin
+
+**Nouveaux endpoints API :**
+- `POST/GET /api/newsletter/subscribe|unsubscribe|subscribers|campaigns`
+- `GET/POST/PUT/DELETE /api/gallery/albums[/:id[/images]]`
+- `GET/POST/DELETE /api/push/vapid-public-key|subscribe|unsubscribe|send|notifications`
+- `GET/POST/PUT/DELETE /api/blog/posts|categories|comments`
+
+**Script :** `node scripts/generate-vapid.js` pour initialiser les clés VAPID dans `.env`
+
+---
+
 ### v3.0 — Images dans Actualités & Calendrier (Juillet 2026)
 
 - **Widget image unifié** dans les onglets Actualités et Calendrier : URL externe ou upload direct
@@ -50,31 +67,15 @@
 - Gestion des réservations dans l'admin (confirmer / annuler)
 - Email de confirmation automatique
 
-### Phase 3 — Newsletter
+### Phase 7 — RSS Feed Blog
 
-- Abonnement public avec vérification email
-- Création de campagnes (Quill WYSIWYG)
-- Envoi groupé via nodemailer
-- Lien de désabonnement
-- Statistiques d'ouverture
+- Endpoint `GET /api/blog/rss.xml`
+- Autodiscovery dans `<head>` des pages blog
 
-### Phase 4 — Galerie photos publique
+### Phase 8 — Statistiques Newsletter
 
-- Albums classés par événement / saison
-- Lightbox au clic
-- Upload en masse depuis l'admin
-
-### Phase 5 — Notifications push
-
-- Web Push API + Service Worker
-- Envoi depuis l'admin
-- Historique des notifications
-
-### Phase 6 — Blog
-
-- Articles avec slug, catégories, statut draft/publié
-- Commentaires avec modération
-- RSS feed
+- Taux d'ouverture (pixel de tracking)
+- Graphique d'évolution des abonnés
 
 ---
 
@@ -86,11 +87,13 @@
 | 1 | Upload d'images (Images tab) | ✅ v2.1 |
 | 1b | Images dans Actualités & Calendrier | ✅ v3.0 |
 | 2 | Réservation de cours | ⚪ |
-| 3 | Newsletter | ⚪ |
-| 4 | Galerie photos publique | ⚪ |
-| 5 | Notifications push | ⚪ |
-| 6 | Blog | ⚪ |
+| 3 | Newsletter | ✅ v4.0 |
+| 4 | Galerie photos publique | ✅ v4.0 |
+| 5 | Notifications push | ✅ v4.0 |
+| 6 | Blog | ✅ v4.0 |
+| 7 | RSS Feed Blog | ⚪ |
+| 8 | Statistiques Newsletter | ⚪ |
 
 ---
 
-*Made with ❤️ by Bob — last updated Juillet 2026 (v3.0)*
+*Made with ❤️ by Bob — last updated Juillet 2026 (v4.0)*

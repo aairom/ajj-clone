@@ -5,8 +5,9 @@
 ```mermaid
 graph TB
     subgraph Client["Client (Browser)"]
-        PUB[Public Pages<br/>index.html / Pages/*.html]
+        PUB[Public Pages<br/>index.html / Pages/*.html<br/>Pages/blog.html<br/>Pages/blog-post.html]
         ADM[Admin Panel<br/>admin/login.html<br/>admin/dashboard.html]
+        SW[Service Worker<br/>sw.js — Push Notifications]
     end
 
     subgraph Server["Node.js / Express Server (server.js)"]
@@ -21,6 +22,10 @@ graph TB
             R_CONTACT["/api/contact"]
             R_IMG["/api/images"]
             R_PRC["/api/prices"]
+            R_NL["/api/newsletter"]
+            R_GAL["/api/gallery"]
+            R_PUSH["/api/push"]
+            R_BLOG["/api/blog"]
         end
     end
 
@@ -31,12 +36,17 @@ graph TB
 
     subgraph External["External Services"]
         SMTP[SMTP / Gmail<br/>nodemailer]
+        WEBPUSH[Web Push<br/>web-push VAPID]
     end
 
     PUB -->|static assets| STATIC
-    PUB -->|GET /api/news public| R_NEWS
-    PUB -->|GET /api/calendar public| R_CAL
-    PUB -->|GET /api/prices public| R_PRC
+    PUB -->|GET /api/news | R_NEWS
+    PUB -->|GET /api/calendar | R_CAL
+    PUB -->|GET /api/prices | R_PRC
+    PUB -->|GET /api/gallery/albums | R_GAL
+    PUB -->|GET /api/blog/posts | R_BLOG
+    PUB -->|POST /api/newsletter/subscribe | R_NL
+    SW -->|POST /api/push/subscribe | R_PUSH
     ADM -->|HTTP REST| RL
     RL --> AUTH_MW
     AUTH_MW --> R_AUTH
@@ -45,9 +55,17 @@ graph TB
     AUTH_MW --> R_CONTACT
     AUTH_MW --> R_IMG
     AUTH_MW -.->|PUT protected| R_PRC
+    AUTH_MW --> R_NL
+    AUTH_MW --> R_GAL
+    AUTH_MW --> R_PUSH
+    AUTH_MW --> R_BLOG
 
     R_AUTH -->|bcrypt + JWT| DB
     R_NEWS --> DB
+    R_NL -->|send campaigns| SMTP
+    R_PUSH -->|send notifications| WEBPUSH
+    R_GAL --> DB
+    R_BLOG --> DB
     R_CAL --> DB
     R_IMG --> DB
     R_PRC --> DB

@@ -9,8 +9,9 @@ Site web moderne pour le club de Jujitsu Traditionnel d'Asnières, développé e
 ```mermaid
 graph TB
     subgraph Client["Client (Browser)"]
-        PUB[Public Pages<br/>index.html<br/>Pages/*.html]
-        ADM[Admin Panel<br/>admin/login.html<br/>admin/dashboard.html]
+        PUB[Public Pages<br/>index.html / Pages/blog.html<br/>Pages/blog-post.html]
+        ADM[Admin Panel<br/>admin/dashboard.html]
+        SW[sw.js — Service Worker]
     end
 
     subgraph Server["Node.js / Express (server.js)"]
@@ -19,12 +20,15 @@ graph TB
         AUTH_MW[JWT Middleware]
 
         subgraph Routes["API Routes"]
-            R_AUTH["/api/auth<br/>20 req/15min"]
+            R_AUTH["/api/auth"]
             R_NEWS["/api/news"]
             R_CAL["/api/calendar"]
-            R_CONTACT["/api/contact"]
             R_IMG["/api/images"]
             R_PRC["/api/prices"]
+            R_NL["/api/newsletter"]
+            R_GAL["/api/gallery"]
+            R_PUSH["/api/push"]
+            R_BLOG["/api/blog"]
         end
     end
 
@@ -33,18 +37,19 @@ graph TB
         FS[uploads/]
     end
 
-    SMTP[Gmail / SMTP<br/>nodemailer]
+    SMTP[Gmail / SMTP]
+    WEBPUSH[Web Push VAPID]
 
     PUB --> STATIC
-    PUB -->|GET /api/news| R_NEWS
-    PUB -->|GET /api/calendar| R_CAL
-    PUB -->|GET /api/prices| R_PRC
+    PUB -->|public GETs| R_NEWS & R_CAL & R_PRC & R_GAL & R_BLOG & R_NL
+    SW -->|subscribe| R_PUSH
     ADM --> RL --> AUTH_MW
-    AUTH_MW --> R_AUTH & R_NEWS & R_CAL & R_CONTACT & R_IMG
-    AUTH_MW -.->|PUT protected| R_PRC
-    R_AUTH & R_NEWS & R_CAL & R_IMG & R_PRC --> DB
+    AUTH_MW --> R_AUTH & R_NEWS & R_CAL & R_IMG & R_NL & R_GAL & R_PUSH & R_BLOG
+    AUTH_MW -.->|PUT| R_PRC
+    R_NEWS & R_CAL & R_IMG & R_PRC & R_NL & R_GAL & R_PUSH & R_BLOG --> DB
     R_IMG --> FS
-    R_CONTACT --> SMTP
+    R_NL -->|campaigns| SMTP
+    R_PUSH -->|send| WEBPUSH
 ```
 
 ---
@@ -86,25 +91,31 @@ sequenceDiagram
 - Page d'accueil avec présentation du club
 - **Actualités** dynamiques avec images, carrousel horizontal natif (scroll-snap)
 - **Calendrier des événements** avec images, carrousel horizontal natif
-- **Tarifs** chargés dynamiquement depuis la base de données (avec fallback statique)
+- **Galerie photos** — albums publics avec lightbox plein écran, navigation clavier
+- **Blog** — prévisualisation des 3 derniers articles + pages [`Pages/blog.html`](Pages/blog.html) et [`Pages/blog-post.html`](Pages/blog-post.html)
+- **Newsletter** — formulaire d'abonnement public avec feedback inline
+- **Tarifs** chargés dynamiquement depuis la base de données
 - Horaires, formulaire de contact
+- **Notifications push** — Service Worker + bouton 🔔 "S'abonner" (si VAPID configuré)
 - Design responsive (mobile / tablette / desktop)
 
 ### Panneau d'Administration Sécurisé
 - Authentification JWT + sessions SQLite
-- **Onglet Actualités** — WYSIWYG Quill.js, image par URL **ou upload direct**
-- **Onglet Calendrier** — WYSIWYG Quill.js, image par URL **ou upload direct**
+- **Onglet Actualités** — WYSIWYG Quill.js, image par URL ou upload direct
+- **Onglet Calendrier** — WYSIWYG Quill.js, image par URL ou upload direct
 - **Onglet Images** — Upload multiple, miniatures auto (Sharp), catégorisation, galerie
 - **Onglet Tarifs** — Mise à jour des prix en temps réel
+- **Onglet Newsletter** — Gestion abonnés + création/envoi campagnes (Quill WYSIWYG)
+- **Onglet Galerie** — Création d'albums + sélecteur d'images depuis la médiathèque
+- **Onglet Notifications** — Envoi push via Web Push API (VAPID) + historique
+- **Onglet Blog** — CRUD articles + catégories + modération des commentaires
 - Rate limiting ciblé (API uniquement, pas les fichiers statiques)
 - bcrypt, prepared statements, protection SQL injection
 
 ### Fonctionnalités Futures
 - ⏳ Réservation de cours en ligne
-- ⏳ Newsletter
-- ⏳ Galerie photos publique
-- ⏳ Notifications push
-- ⏳ Blog avec commentaires
+- ⏳ RSS Feed Blog
+- ⏳ Statistiques Newsletter
 
 ---
 
@@ -122,7 +133,11 @@ ajj-clone/
 │   ├── comite-directeur.html
 │   ├── quest-ce-que-le-ju-jitsu.html
 │   ├── 5-bonnes-raisons.html
-│   └── faq.html
+│   ├── faq.html
+│   ├── blog.html           # Liste des articles du blog
+│   └── blog-post.html      # Article individuel + commentaires
+│
+├── sw.js                   # Service Worker (push notifications)
 │
 ├── admin/                  # Interface admin
 │   ├── login.html / login.js
@@ -132,15 +147,20 @@ ajj-clone/
 ├── scripts/                # Scripts BASH et utilitaires
 │   ├── START.sh            # Démarrage en mode détaché
 │   ├── STOP.sh             # Arrêt gracieux
-│   └── init-db.js          # Initialisation SQLite
+│   ├── init-db.js          # Initialisation SQLite
+│   └── generate-vapid.js   # Génération des clés VAPID push
 │
 ├── routes/                 # Routes API
 │   ├── auth.js
 │   ├── news.js
-│   ├── calendar.js         # Inclut champ `image`
+│   ├── calendar.js
 │   ├── contact.js
 │   ├── images.js
-│   └── prices.js
+│   ├── prices.js
+│   ├── newsletter.js       # Newsletter (abonnés + campagnes)
+│   ├── gallery.js          # Galerie photos (albums + images)
+│   ├── push.js             # Notifications push (VAPID)
+│   └── blog.js             # Blog (articles + catégories + commentaires)
 │
 ├── middleware/
 │   ├── auth.js             # Middleware JWT + sessions
@@ -177,10 +197,13 @@ cp .env.example .env
 # 3. Initialiser la base de données
 npm run init-db
 
-# 4. Démarrer (mode détaché)
+# 4. (Optionnel) Générer les clés VAPID pour les notifications push
+node scripts/generate-vapid.js
+
+# 5. Démarrer (mode détaché)
 ./scripts/START.sh
 
-# 5. Arrêter
+# 6. Arrêter
 ./scripts/STOP.sh
 ```
 
