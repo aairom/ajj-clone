@@ -108,16 +108,8 @@ podman rm -f ajj-app
 | Stop | `./scripts/STOP.sh` |
 | Dev mode (auto-reload) | `npm run dev` |
 | Reset database | `rm data/admin.db && npm run init-db` |
-| View logs | `tail -f server.log` |
+| View logs | `tail -f logs/server.log` |
 | Build container | `podman build -t ajj-app:latest .` |
-
----
-
-## Next steps
-
-- [`Docs/Architecture.md`](Architecture.md) — system & deployment diagrams
-- [`Docs/SETUP.md`](SETUP.md) — full installation details
-- [`Docs/EMAIL-SETUP.md`](EMAIL-SETUP.md) — configure the contact form
 
 ---
 
@@ -125,7 +117,30 @@ podman rm -f ajj-app
 
 | Tab | Description |
 |-----|-------------|
-| Actualités | Créer / modifier / supprimer les articles (Quill WYSIWYG) |
-| Calendrier | Gérer les événements (Quill WYSIWYG) |
-| Images | Upload multiple, miniatures automatiques, catégorisation |
+| **Actualités** | Créer / modifier / supprimer les articles (Quill WYSIWYG) + image par URL ou upload direct |
+| **Calendrier** | Gérer les événements (Quill WYSIWYG) + image par URL ou upload direct |
+| **Images** | Upload multiple, miniatures automatiques (Sharp), catégorisation, galerie |
 | **Tarifs** | Mettre à jour les prix affichés sur la page publique |
+
+### Ajouter une image à une actualité ou un événement
+
+Dans les onglets **Actualités** et **Calendrier**, le champ Image propose deux options :
+
+1. **URL externe** — coller un lien direct vers une image hébergée ailleurs
+2. **Téléverser** — cliquer sur le bouton "Téléverser" pour choisir un fichier local ;  
+   l'image est uploadée via `/api/images/upload`, stockée dans `uploads/`, et son chemin est enregistré automatiquement.
+
+Un aperçu s'affiche immédiatement. Le bouton ✕ efface la sélection.
+
+---
+
+## Next steps
+
+- [`Docs/Architecture.md`](Architecture.md) — system & deployment diagrams, DB schema
+- [`Docs/SETUP.md`](SETUP.md) — full installation details
+- [`Docs/IMAGE-UPLOAD-GUIDE.md`](IMAGE-UPLOAD-GUIDE.md) — image upload API reference
+- [`Docs/EMAIL-SETUP.md`](EMAIL-SETUP.md) — configure the contact form
+
+---
+
+*Made with ❤️ by Bob — last updated Juillet 2026 (v3.0)*

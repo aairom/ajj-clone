@@ -1,299 +1,227 @@
-# 🥋 Asnières Jujitsu - Secure Admin System Setup Guide
+# 🥋 Asnières Jujitsu — Setup Guide
 
-This guide will help you set up the secure local login system with SQLite database.
+Full installation and configuration reference.
 
-## 📋 Prerequisites
+---
 
-- **Node.js** (v14 or higher) - [Download here](https://nodejs.org/)
-- **npm** (comes with Node.js)
+## Prerequisites
 
-## 🚀 Installation Steps
+| Tool | Version |
+|------|---------|
+| Node.js | v18 LTS or v20 LTS |
+| npm | bundled with Node.js |
 
-### 1. Install Dependencies
+> ⚠️ Node.js v24+ is not yet compatible with `better-sqlite3`. Use v20 LTS.
 
-Open a terminal in the project directory and run:
+---
+
+## Installation
+
+### 1 — Install dependencies
 
 ```bash
 npm install
 ```
 
-This will install all required packages:
-- express (web server)
-- bcrypt (password hashing)
-- jsonwebtoken (JWT authentication)
-- better-sqlite3 (SQLite database)
-- cors (cross-origin requests)
-- dotenv (environment variables)
-- express-rate-limit (security)
+Key packages installed:
+- `express` — web server
+- `better-sqlite3` — SQLite database
+- `bcrypt` — password hashing
+- `jsonwebtoken` — JWT authentication
+- `express-rate-limit` — API rate limiting
+- `multer` + `sharp` + `uuid` — image upload & processing
+- `nodemailer` — contact form emails
+- `dotenv` — environment variables
 
-### 2. Configure Environment Variables
-
-Create a `.env` file in the project root:
+### 2 — Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-**IMPORTANT:** Edit the `.env` file and change the JWT_SECRET to a strong random string:
+Edit `.env`:
 
 ```env
-JWT_SECRET=your-very-long-random-secret-key-here-change-this
+PORT=3000
+NODE_ENV=development
+
+# REQUIRED — generate a strong secret:
+# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+JWT_SECRET=your-strong-secret-here
+
+JWT_EXPIRES_IN=24h
+DB_PATH=./data/admin.db
+
+# Default admin (used only by init-db, change immediately after first login)
+DEFAULT_ADMIN_USERNAME=admin
+DEFAULT_ADMIN_PASSWORD=admin123
+
+# Contact form email
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-gmail-app-password
 ```
 
-You can generate a secure secret using:
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
-
-### 3. Initialize the Database
-
-Run the database initialization script:
+### 3 — Initialise the database
 
 ```bash
 npm run init-db
 ```
 
-This will:
-- Create the `data/` directory
-- Create the SQLite database (`admin.db`)
-- Set up all required tables (users, sessions, news, calendar_events, images, **prices**)
-- Seed the `prices` table with 4 default entries (Adulte, Mineur, Ceinture Noire, Remise en forme)
-- Create the default admin user
+Creates `data/admin.db` with tables:
 
-**Default Credentials:**
-- Username: `admin`
-- Password: `admin123`
+| Table | Purpose |
+|-------|---------|
+| `users` | Admin accounts (bcrypt passwords) |
+| `sessions` | JWT session tracking |
+| `news` | Actualités (title, content, date, image) |
+| `calendar_events` | Événements (title, description, date, image) |
+| `images` | Uploaded image metadata |
+| `prices` | Tarifs (seeded with 4 default entries) |
 
-⚠️ **IMPORTANT:** Change these credentials after first login!
+> **Existing DB from before v3.0?** The `calendar_events.image` column may be missing. Add it:
+> ```bash
+> node -e "const db=require('better-sqlite3')('./data/admin.db'); db.prepare('ALTER TABLE calendar_events ADD COLUMN image TEXT DEFAULT NULL').run(); db.close(); console.log('done');"
+> ```
 
-### 4. Start the Server
-
-Start the development server:
-
-```bash
-npm start
-```
-
-Or for auto-restart on file changes:
+### 4 — Start
 
 ```bash
+# Development (auto-reload with nodemon)
 npm run dev
+
+# Production (detached background process)
+./scripts/START.sh
+
+# Stop
+./scripts/STOP.sh
 ```
 
-The server will start on `http://localhost:3000`
-
-## 🔐 Security Features
-
-### Password Security
-- Passwords are hashed using bcrypt (10 rounds)
-- Never stored in plain text
-- Secure comparison to prevent timing attacks
-
-### JWT Authentication
-- Tokens expire after 24 hours (configurable)
-- Tokens are stored in localStorage (client-side)
-- Token verification on every protected request
-- Session tracking in database
-
-### Rate Limiting
-- Login attempts: 5 per 15 minutes per IP
-- General API: 100 requests per 15 minutes per IP
-
-### Database Security
-- SQLite database stored locally in `data/` folder
-- Database file excluded from git (.gitignore)
-- Prepared statements prevent SQL injection
-- Foreign key constraints enabled
-
-## 📁 Project Structure
-
-```
-ajj-clone/
-├── admin/
-│   ├── login.html          # Login page
-│   ├── login.js            # Login logic (uses API)
-│   ├── dashboard.html      # Admin dashboard (tabs: Actualités, Calendrier, Images, Tarifs)
-│   ├── dashboard.js        # Dashboard logic (uses API)
-│   └── admin-style.css     # Admin styles
-├── routes/
-│   ├── auth.js             # Authentication endpoints
-│   ├── news.js             # News CRUD endpoints
-│   ├── calendar.js         # Calendar CRUD endpoints
-│   ├── images.js           # Image upload/management endpoints
-│   └── prices.js           # Prices GET (public) / PUT (protected)
-├── middleware/
-│   ├── auth.js             # JWT verification middleware
-│   └── upload.js           # Multer configuration
-├── scripts/
-│   └── init-db.js          # Database initialization (includes prices seed)
-├── data/
-│   └── admin.db            # SQLite database (created on init)
-├── server.js               # Express server
-├── package.json            # Dependencies
-├── .env                    # Environment variables (create this)
-└── .env.example            # Environment template
-```
-
-## 🔌 API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - Login with username/password
-- `POST /api/auth/logout` - Logout (invalidate token)
-- `GET /api/auth/verify` - Verify token validity
-- `POST /api/auth/change-password` - Change password
-
-### News (Protected)
-- `GET /api/news` - Get all news
-- `GET /api/news/:id` - Get single news item
-- `POST /api/news` - Create news (requires auth)
-- `PUT /api/news/:id` - Update news (requires auth)
-- `DELETE /api/news/:id` - Delete news (requires auth)
-
-### Calendar (Protected)
-- `GET /api/calendar` - Get all events
-- `GET /api/calendar/:id` - Get single event
-- `POST /api/calendar` - Create event (requires auth)
-- `PUT /api/calendar/:id` - Update event (requires auth)
-- `DELETE /api/calendar/:id` - Delete event (requires auth)
-
-### Prices
-- `GET /api/prices` - Get all price entries **(public)**
-- `PUT /api/prices/:id` - Update a price value (requires auth)
-
-## 🎯 Usage
-
-### 1. Access Admin Panel
-
-Open your browser and go to:
-```
-http://localhost:3000/admin/login.html
-```
-
-### 2. Login
-
-Use the default credentials:
-- Username: `admin`
-- Password: `admin123`
-
-### 3. Change Password
-
-After first login, it's recommended to change your password:
-1. Use the `/api/auth/change-password` endpoint
-2. Or add a password change UI to the dashboard
-
-### 4. Manage Content
-
-- **News Tab**: Create, edit, and delete news articles
-- **Calendar Tab**: Manage events and dates
-
-## 🛠️ Development
-
-### Database Management
-
-View database contents:
-```bash
-sqlite3 data/admin.db
-```
-
-SQLite commands:
-```sql
-.tables                    -- List all tables
-.schema users             -- Show table structure
-SELECT * FROM users;      -- View all users
-SELECT * FROM news;       -- View all news
-SELECT * FROM calendar_events;  -- View all events
-```
-
-### Reset Database
-
-To reset the database:
-```bash
-rm data/admin.db
-npm run init-db
-```
-
-### Add New Admin User
-
-You can add users directly via SQL:
-```bash
-sqlite3 data/admin.db
-```
-
-```sql
-INSERT INTO users (username, password_hash, full_name, role)
-VALUES ('newadmin', '$2b$10$...', 'New Admin', 'admin');
-```
-
-Or create a script to add users with hashed passwords.
-
-## 🔒 Production Deployment
-
-### Before deploying to production:
-
-1. **Change JWT Secret**
-   - Generate a strong random secret
-   - Update `.env` file
-
-2. **Change Default Credentials**
-   - Login and change password immediately
-   - Or modify `DEFAULT_ADMIN_PASSWORD` in `.env` before init
-
-3. **Set NODE_ENV**
-   ```env
-   NODE_ENV=production
-   ```
-
-4. **Use HTTPS**
-   - Configure SSL/TLS certificates
-   - Use a reverse proxy (nginx, Apache)
-
-5. **Secure the Database**
-   - Set proper file permissions on `data/admin.db`
-   - Regular backups
-
-6. **Update CORS Settings**
-   - Restrict allowed origins in `server.js`
-
-7. **Monitor Logs**
-   - Set up proper logging
-   - Monitor failed login attempts
-
-## 🐛 Troubleshooting
-
-### Server won't start
-- Check if port 3000 is already in use
-- Verify Node.js is installed: `node --version`
-- Check for errors in terminal
-
-### Database errors
-- Ensure `data/` directory exists
-- Run `npm run init-db` again
-- Check file permissions
-
-### Login fails
-- Verify server is running
-- Check browser console for errors
-- Ensure `.env` file exists
-- Verify database has admin user
-
-### CORS errors
-- Check API_URL in `login.js` and `dashboard.js`
-- Ensure server is running on correct port
-
-## 📝 Notes
-
-- The database file (`admin.db`) is excluded from git
-- Keep your `.env` file secure and never commit it
-- Regular backups of the database are recommended
-- Monitor the `sessions` table and clean up expired sessions periodically
-
-## 🆘 Support
-
-For issues or questions:
-1. Check the troubleshooting section
-2. Review server logs in terminal
-3. Check browser console for frontend errors
+Server URL: `http://localhost:3000`  
+Admin panel: `http://localhost:3000/admin/login.html`  
+Default credentials: `admin` / `admin123` — **change immediately**
 
 ---
 
-Made with ❤️ by Bob
+## Rate Limiting
+
+| Scope | Limit |
+|-------|-------|
+| `POST /api/auth/login` | 20 requests / 15 min / IP |
+| All other `/api/*` routes | 500 requests / 15 min / IP |
+| Static files (CSS, JS, images) | **Not rate-limited** |
+
+Static files are served before the rate limiter so page loads and asset fetches do not consume the API quota.
+
+---
+
+## API Endpoints
+
+### Authentication
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/auth/login` | — | Login, returns JWT |
+| POST | `/api/auth/logout` | ✅ | Invalidate session |
+| GET | `/api/auth/verify` | ✅ | Check token validity |
+| POST | `/api/auth/change-password` | ✅ | Change password |
+
+### News
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/news` | — | All news (public) |
+| GET | `/api/news/:id` | — | Single item (public) |
+| POST | `/api/news` | ✅ admin | Create (title, content, date, image) |
+| PUT | `/api/news/:id` | ✅ admin | Update |
+| DELETE | `/api/news/:id` | ✅ admin | Delete |
+
+### Calendar
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/calendar` | — | All events (public) |
+| GET | `/api/calendar/:id` | — | Single event (public) |
+| POST | `/api/calendar` | ✅ admin | Create (title, description, date, image) |
+| PUT | `/api/calendar/:id` | ✅ admin | Update |
+| DELETE | `/api/calendar/:id` | ✅ admin | Delete |
+
+### Images
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| POST | `/api/images/upload` | ✅ | Upload single image |
+| POST | `/api/images/upload-multiple` | ✅ | Upload up to 10 images |
+| GET | `/api/images` | ✅ | List with optional `?category=` filter |
+| GET | `/api/images/:id` | ✅ | Single image metadata |
+| PUT | `/api/images/:id` | ✅ | Update alt_text / category |
+| DELETE | `/api/images/:id` | ✅ | Delete image + files |
+
+### Prices
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/prices` | — | All prices (public) |
+| PUT | `/api/prices/:id` | ✅ admin | Update price value |
+
+---
+
+## Security
+
+| Mechanism | Detail |
+|-----------|--------|
+| Passwords | bcrypt, 10 rounds |
+| JWT | 24h expiry, session tracked in `sessions` table |
+| SQL injection | Prepared statements throughout |
+| File uploads | MIME + extension whitelist, UUID filenames, 10 MB limit |
+| Secrets | `.env` file, never committed |
+
+### Before production
+
+1. **Generate strong JWT_SECRET:**
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+2. **Change default admin password** (login → `/api/auth/change-password`)
+3. **Set `NODE_ENV=production`**
+4. **Enable HTTPS** via reverse proxy (nginx / Caddy)
+5. **Secure the database:** `chmod 600 data/admin.db`
+6. **Regular backups:**
+   ```bash
+   cp data/admin.db data/admin-$(date +%Y%m%d).db
+   tar -czf uploads-$(date +%Y%m%d).tar.gz uploads/
+   ```
+
+---
+
+## Database management
+
+```bash
+# Open SQLite shell
+sqlite3 data/admin.db
+
+# Useful queries
+.tables
+SELECT * FROM news;
+SELECT * FROM calendar_events;
+SELECT * FROM prices;
+SELECT id, username, role FROM users;
+SELECT id, expires_at FROM sessions;
+
+# Reset
+.quit
+rm data/admin.db && npm run init-db
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Port 3000 in use | `lsof -ti:3000 \| xargs kill` |
+| `better-sqlite3` build error | Use Node.js v20 LTS |
+| Login fails after server restart | Token still valid — log in again |
+| "Erreur de chargement" in admin | Server down, or rate limit hit — restart |
+| Images tab empty (gallery) | Was a known bug (count query) — fixed in v3.0 |
+| Calendar events not showing | Date filter bug — fixed in v3.0; check `event.date >= todayStr` |
+
+Logs: `tail -f logs/server.log`
+
+---
+
+*Made with ❤️ by Bob — last updated Juillet 2026 (v3.0)*

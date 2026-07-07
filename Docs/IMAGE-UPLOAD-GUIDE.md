@@ -1,52 +1,63 @@
-# 📸 Image Upload System - User Guide
+# 📸 Image Upload System — Guide
 
-Complete guide for using the image upload system in the Asnières Jujitsu admin panel.
+Complete guide for the image upload system in the Asnières Jujitsu admin panel.
 
-## 🎯 Overview
+---
 
-The image upload system allows administrators to:
-- Upload single or multiple images
-- Automatic thumbnail generation
-- Image library management
-- Use images in news articles and blog posts
-- Organize images by category
+## Overview
 
-## 🚀 Features
+Images can be attached to **Actualités** and **Calendrier** entries, or managed independently in the **Images** tab. Two methods are available in every image field:
 
-### ✅ Implemented Features
+| Method | How |
+|--------|-----|
+| **URL externe** | Paste any public image URL into the URL field |
+| **Téléverser** | Click the "Téléverser" button, pick a local file — uploaded instantly to `/uploads/` |
 
-- **Single & Multiple Upload** - Upload one or many images at once
-- **Automatic Thumbnails** - 300x300px thumbnails generated automatically
-- **Image Optimization** - Images processed with Sharp for optimal size
-- **Secure Storage** - Unique filenames prevent conflicts
-- **File Validation** - Only JPEG, PNG, GIF, WebP allowed
-- **Size Limits** - Maximum 10MB per file
-- **Metadata** - Alt text and categories for organization
-- **Delete Functionality** - Remove images and associated files
+An inline preview appears as soon as a file is chosen or a URL is typed. The ✕ button clears the selection.
 
-## 📋 API Endpoints
+---
 
-### Upload Single Image
+## Admin UI — Image fields in Actualités & Calendrier
 
-**Endpoint:** `POST /api/images/upload`
+Each form contains an image widget:
 
-**Authentication:** Required (JWT token)
+```
+[ URL field _________________________ ]  ou  [ 📤 Téléverser ]
+[ Preview thumbnail  ✕ ]
+```
+
+- Choosing a file clears the URL field (and vice-versa).
+- On **save**, if a file is selected it is uploaded first via `POST /api/images/upload`; the returned `/uploads/<uuid>.ext` path is stored in the record.
+- On **edit**, the current image is pre-loaded in the preview.
+- On **cancel**, the preview is cleared.
+
+---
+
+## Images Tab — Standalone gallery
+
+The **Images** tab allows uploading images independently of any news or event:
+
+- Select one or more files (up to 10 at once via `POST /api/images/upload-multiple`)
+- Choose a category: Général, Actualités, Événements, Entraînements, Galerie
+- A progress bar tracks the upload
+- The gallery below refreshes automatically after upload
+- Each image card has: copy-URL button, view button, delete button
+
+---
+
+## API Endpoints
+
+All endpoints require a valid JWT Bearer token except where noted.
+
+### `POST /api/images/upload` — Upload single image
 
 **Content-Type:** `multipart/form-data`
 
-**Parameters:**
-- `image` (file, required) - The image file
-- `alt_text` (string, optional) - Alternative text for accessibility
-- `category` (string, optional) - Category (default: 'general')
-
-**Example using curl:**
-```bash
-curl -X POST http://localhost:3000/api/images/upload \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -F "image=@/path/to/image.jpg" \
-  -F "alt_text=Description of image" \
-  -F "category=news"
-```
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image` | file | ✅ | Image file |
+| `alt_text` | string | — | Alt text |
+| `category` | string | — | Default: `general` |
 
 **Response:**
 ```json
@@ -54,359 +65,121 @@ curl -X POST http://localhost:3000/api/images/upload \
   "success": true,
   "message": "Image téléchargée avec succès",
   "image": {
-    "id": 1,
-    "filename": "uuid-generated-name.jpg",
-    "original_name": "my-image.jpg",
-    "path": "/uploads/uuid-generated-name.jpg",
-    "thumbnail_path": "/uploads/thumbnails/thumb_uuid-generated-name.jpg",
+    "id": 4,
+    "filename": "uuid.jpg",
+    "original_name": "photo.jpg",
+    "path": "/uploads/uuid.jpg",
+    "thumbnail_path": "/uploads/thumbnails/thumb_uuid.jpg",
     "size": 245678,
     "mime_type": "image/jpeg"
   }
 }
 ```
 
-### Upload Multiple Images
+### `POST /api/images/upload-multiple` — Upload up to 10 images
 
-**Endpoint:** `POST /api/images/upload-multiple`
+| Field | Type | Required |
+|-------|------|----------|
+| `images` | files (array) | ✅ |
+| `category` | string | — |
 
-**Authentication:** Required (JWT token)
+### `GET /api/images` — List images
 
-**Content-Type:** `multipart/form-data`
+| Query param | Default | Description |
+|-------------|---------|-------------|
+| `category` | — | Filter by category |
+| `limit` | 50 | Page size |
+| `offset` | 0 | Pagination offset |
 
-**Parameters:**
-- `images` (files, required) - Array of image files (max 10)
-- `category` (string, optional) - Category for all images
+### `GET /api/images/:id` — Single image
 
-**Example using curl:**
-```bash
-curl -X POST http://localhost:3000/api/images/upload-multiple \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -F "images=@/path/to/image1.jpg" \
-  -F "images=@/path/to/image2.jpg" \
-  -F "category=gallery"
-```
+### `PUT /api/images/:id` — Update metadata
 
-**Response:**
-```json
-{
-  "success": true,
-  "message": "2 image(s) téléchargée(s) avec succès",
-  "images": [
-    {
-      "id": 1,
-      "filename": "uuid1.jpg",
-      "original_name": "image1.jpg",
-      "path": "/uploads/uuid1.jpg",
-      "thumbnail_path": "/uploads/thumbnails/thumb_uuid1.jpg"
-    },
-    {
-      "id": 2,
-      "filename": "uuid2.jpg",
-      "original_name": "image2.jpg",
-      "path": "/uploads/uuid2.jpg",
-      "thumbnail_path": "/uploads/thumbnails/thumb_uuid2.jpg"
-    }
-  ]
-}
-```
+Body: `{ "alt_text": "...", "category": "..." }`
 
-### Get All Images
-
-**Endpoint:** `GET /api/images`
-
-**Authentication:** Required (JWT token)
-
-**Query Parameters:**
-- `category` (string, optional) - Filter by category
-- `limit` (number, optional) - Number of results (default: 50)
-- `offset` (number, optional) - Pagination offset (default: 0)
-
-**Example:**
-```bash
-curl -X GET "http://localhost:3000/api/images?category=news&limit=20&offset=0" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "images": [
-    {
-      "id": 1,
-      "filename": "uuid.jpg",
-      "original_name": "photo.jpg",
-      "mime_type": "image/jpeg",
-      "size": 245678,
-      "path": "/uploads/uuid.jpg",
-      "thumbnail_path": "/uploads/thumbnails/thumb_uuid.jpg",
-      "alt_text": "Description",
-      "category": "news",
-      "uploaded_by": 1,
-      "created_at": "2024-12-18 20:00:00"
-    }
-  ],
-  "pagination": {
-    "total": 45,
-    "limit": 20,
-    "offset": 0,
-    "hasMore": true
-  }
-}
-```
-
-### Get Single Image
-
-**Endpoint:** `GET /api/images/:id`
-
-**Authentication:** Required (JWT token)
-
-**Example:**
-```bash
-curl -X GET http://localhost:3000/api/images/1 \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-### Update Image Metadata
-
-**Endpoint:** `PUT /api/images/:id`
-
-**Authentication:** Required (JWT token)
-
-**Body:**
-```json
-{
-  "alt_text": "Updated description",
-  "category": "gallery"
-}
-```
-
-**Example:**
-```bash
-curl -X PUT http://localhost:3000/api/images/1 \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"alt_text":"New description","category":"gallery"}'
-```
-
-### Delete Image
-
-**Endpoint:** `DELETE /api/images/:id`
-
-**Authentication:** Required (JWT token)
-
-**Example:**
-```bash
-curl -X DELETE http://localhost:3000/api/images/1 \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Image supprimée avec succès"
-}
-```
-
-## 🗂️ File Structure
-
-```
-ajj-clone/
-├── uploads/
-│   ├── .gitkeep
-│   ├── uuid-image1.jpg
-│   ├── uuid-image2.png
-│   └── thumbnails/
-│       ├── thumb_uuid-image1.jpg
-│       └── thumb_uuid-image2.png
-├── middleware/
-│   └── upload.js          # Multer configuration
-└── routes/
-    └── images.js          # Image API routes
-```
-
-## 🔒 Security Features
-
-### File Validation
-
-- **Allowed Types:** JPEG, JPG, PNG, GIF, WebP only
-- **Max Size:** 10MB per file
-- **Filename Security:** UUID-based names prevent conflicts and path traversal
-- **MIME Type Check:** Validates both extension and MIME type
-
-### Access Control
-
-- All endpoints require JWT authentication
-- Only authenticated admins can upload/delete images
-- Images are associated with the uploading user
-
-### Storage Security
-
-- Files stored outside web root (in `/uploads`)
-- Served through Express static middleware
-- No direct file system access from web
-
-## 📊 Database Schema
-
-```sql
-CREATE TABLE images (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    filename TEXT NOT NULL,
-    original_name TEXT NOT NULL,
-    mime_type TEXT NOT NULL,
-    size INTEGER NOT NULL,
-    path TEXT NOT NULL,
-    thumbnail_path TEXT,
-    alt_text TEXT,
-    category TEXT DEFAULT 'general',
-    uploaded_by INTEGER,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (uploaded_by) REFERENCES users(id)
-);
-
--- Indexes for performance
-CREATE INDEX idx_images_category ON images(category);
-CREATE INDEX idx_images_uploaded_by ON images(uploaded_by);
-```
-
-## 🎨 Categories
-
-Suggested categories for organization:
-
-- `general` - Default category
-- `news` - News article images
-- `gallery` - Photo gallery
-- `blog` - Blog post images
-- `events` - Event photos
-- `team` - Team member photos
-- `training` - Training session photos
-
-## 💡 Usage Examples
-
-### JavaScript/Fetch API
-
-```javascript
-// Upload single image
-async function uploadImage(file, altText, category) {
-    const formData = new FormData();
-    formData.append('image', file);
-    formData.append('alt_text', altText);
-    formData.append('category', category);
-
-    const response = await fetch('/api/images/upload', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-    });
-
-    return await response.json();
-}
-
-// Upload multiple images
-async function uploadMultipleImages(files, category) {
-    const formData = new FormData();
-    files.forEach(file => {
-        formData.append('images', file);
-    });
-    formData.append('category', category);
-
-    const response = await fetch('/api/images/upload-multiple', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-    });
-
-    return await response.json();
-}
-
-// Get images
-async function getImages(category = null, limit = 50, offset = 0) {
-    const params = new URLSearchParams({
-        limit,
-        offset,
-        ...(category && { category })
-    });
-
-    const response = await fetch(`/api/images?${params}`, {
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-    });
-
-    return await response.json();
-}
-
-// Delete image
-async function deleteImage(imageId) {
-    const response = await fetch(`/api/images/${imageId}`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-    });
-
-    return await response.json();
-}
-```
-
-## 🐛 Troubleshooting
-
-### Upload Fails
-
-**Error:** "Seuls les fichiers image sont autorisés"
-- **Solution:** Ensure file is JPEG, PNG, GIF, or WebP
-
-**Error:** "File too large"
-- **Solution:** Reduce file size to under 10MB
-
-**Error:** "Unauthorized"
-- **Solution:** Check JWT token is valid and included in Authorization header
-
-### Thumbnails Not Generated
-
-- Check Sharp is installed: `npm list sharp`
-- Verify write permissions on `uploads/thumbnails/` directory
-- Check server logs for Sharp errors
-
-### Images Not Displaying
-
-- Verify `/uploads` route is configured in server.js
-- Check file exists in `uploads/` directory
-- Ensure correct path in database
-
-## 📈 Performance Tips
-
-1. **Optimize Before Upload** - Compress images before uploading
-2. **Use Thumbnails** - Display thumbnails in lists, full images on click
-3. **Lazy Loading** - Implement lazy loading for image galleries
-4. **CDN** - Consider CDN for production (CloudFlare, AWS CloudFront)
-5. **Caching** - Set appropriate cache headers for uploaded images
-
-## 🔄 Backup Strategy
-
-```bash
-# Backup uploads directory
-tar -czf uploads-backup-$(date +%Y%m%d).tar.gz uploads/
-
-# Backup database (includes image metadata)
-cp data/admin.db data/admin-backup-$(date +%Y%m%d).db
-```
-
-## 🚀 Next Steps
-
-- [ ] Add image cropping functionality
-- [ ] Implement drag & drop upload UI
-- [ ] Add image search by filename/alt text
-- [ ] Create image picker component for news/blog
-- [ ] Add bulk delete functionality
-- [ ] Implement image compression settings
+### `DELETE /api/images/:id` — Delete image + files
 
 ---
 
-**Image Upload System implemented by Bob**
-**Last updated:** December 18, 2024
+## Storage
+
+```
+uploads/
+├── <uuid>.jpg              ← original file
+└── thumbnails/
+    └── thumb_<uuid>.jpg    ← 300×300 px (Sharp, fit: inside)
+```
+
+Files are served at `/uploads/<filename>` by Express static middleware.
+
+---
+
+## Constraints
+
+| Rule | Value |
+|------|-------|
+| Max file size | 10 MB |
+| Max files per multi-upload | 10 |
+| Allowed types | JPEG, PNG, GIF, WebP |
+| Thumbnail size | 300 × 300 px (aspect-ratio preserved) |
+| Filename | UUID v4 — prevents conflicts and path traversal |
+
+---
+
+## Database schema
+
+```sql
+CREATE TABLE images (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename      TEXT NOT NULL,
+    original_name TEXT NOT NULL,
+    mime_type     TEXT NOT NULL,
+    size          INTEGER NOT NULL,
+    path          TEXT NOT NULL,
+    thumbnail_path TEXT,
+    alt_text      TEXT,
+    category      TEXT DEFAULT 'general',
+    uploaded_by   INTEGER REFERENCES users(id),
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+The `image` field in **news** and **calendar_events** stores the public path (e.g. `/uploads/uuid.jpg` or an external URL string).
+
+---
+
+## Public page rendering
+
+**Actualités cards** — if `item.image` is set, an `<img>` is rendered at the top of each card (`height: 200px; object-fit: cover`).
+
+**Calendrier cards** — if `event.image` is set, an `<img class="event-image">` is rendered at the top of each card (`height: 160px; object-fit: cover`). Text content is padded below.
+
+Cards with no image display a placeholder SVG.
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Upload fails with "Seuls les fichiers image sont autorisés" | Wrong file type | Use JPEG, PNG, GIF or WebP |
+| Upload fails with 413 | File > 10 MB | Compress or resize first |
+| Galerie shows "Erreur de chargement" | Server not running or rate limit hit | Restart server; check `logs/server.log` |
+| Image not showing on public page | Path mismatch | Verify `path` in DB starts with `/uploads/` |
+| Thumbnail missing | Sharp error during upload | Check `logs/server.log`; verify `uploads/thumbnails/` is writable |
+
+---
+
+## Backup
+
+```bash
+# Backup uploaded files
+tar -czf uploads-backup-$(date +%Y%m%d).tar.gz uploads/
+
+# Backup database (includes all image metadata)
+cp data/admin.db data/admin-backup-$(date +%Y%m%d).db
+```
+
+---
+
+*Made with ❤️ by Bob — last updated Juillet 2026 (v3.0)*

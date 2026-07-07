@@ -5,17 +5,17 @@
 ```mermaid
 graph TB
     subgraph Client["Client (Browser)"]
-        PUB[Public Pages<br/>index.html<br/>Pages/*.html]
+        PUB[Public Pages<br/>index.html / Pages/*.html]
         ADM[Admin Panel<br/>admin/login.html<br/>admin/dashboard.html]
     end
 
     subgraph Server["Node.js / Express Server (server.js)"]
-        RL[Rate Limiter<br/>express-rate-limit]
+        STATIC[Static File Server<br/>served BEFORE rate limiter]
+        RL[Rate Limiter<br/>500 req / 15 min — API only]
         AUTH_MW[Auth Middleware<br/>middleware/auth.js]
-        STATIC[Static File Server<br/>public + uploads]
 
         subgraph Routes["API Routes"]
-            R_AUTH["/api/auth"]
+            R_AUTH["/api/auth<br/>20 req/15min"]
             R_NEWS["/api/news"]
             R_CAL["/api/calendar"]
             R_CONTACT["/api/contact"]
@@ -33,7 +33,9 @@ graph TB
         SMTP[SMTP / Gmail<br/>nodemailer]
     end
 
-    PUB -->|HTTP| STATIC
+    PUB -->|static assets| STATIC
+    PUB -->|GET /api/news public| R_NEWS
+    PUB -->|GET /api/calendar public| R_CAL
     PUB -->|GET /api/prices public| R_PRC
     ADM -->|HTTP REST| RL
     RL --> AUTH_MW
@@ -65,21 +67,29 @@ sequenceDiagram
     participant DB
 
     Browser->>Express: POST /api/auth/login {username, password}
-    Express->>Auth: Rate-limit check (5 req / 15 min)
+    Express->>Auth: Rate-limit check (20 req / 15 min)
     Auth->>DB: SELECT user WHERE username=?
     DB-->>Auth: user row
     Auth->>Auth: bcrypt.compare(password, hash)
-    Auth-->>Express: JWT token
+    Auth-->>Express: JWT token + session INSERT
     Express-->>Browser: 200 {token, user}
 
-    Browser->>Express: GET /api/news (Bearer token)
-    Express->>Auth: verifyToken middleware
-    Auth->>DB: SELECT session WHERE token_hash=?
-    DB-->>Auth: session valid
-    Auth-->>Express: req.user populated
-    Express->>DB: SELECT * FROM news
+    Browser->>Express: GET /api/news (public — no token needed)
+    Express->>DB: SELECT * FROM news ORDER BY date DESC
     DB-->>Express: rows
-    Express-->>Browser: 200 {news: [...]}
+    Express-->>Browser: 200 {success, data:[...]}
+
+    Browser->>Express: POST /api/images/upload (Bearer token)
+    Express->>Auth: verifyToken → check sessions table
+    Auth-->>Express: req.user
+    Express->>FS: multer → write file, sharp → thumbnail
+    Express->>DB: INSERT INTO images
+    Express-->>Browser: 200 {image.path}
+
+    Browser->>Express: POST /api/news (Bearer token)
+    Express->>Auth: verifyToken + requireAdmin
+    Express->>DB: INSERT INTO news (title,content,date,image,…)
+    Express-->>Browser: 201 {success, data}
 ```
 
 ---
@@ -121,6 +131,7 @@ erDiagram
         text title
         text description
         date date
+        text image
         int created_by FK
         datetime created_at
         datetime updated_at
@@ -150,6 +161,12 @@ erDiagram
     USERS ||--o{ CALENDAR_EVENTS : "creates"
     USERS ||--o{ IMAGES : "uploads"
 ```
+
+> **Note :** Le champ `image` de `calendar_events` a été ajouté en v3.0 via `ALTER TABLE`.  
+> Si votre base a été initialisée avant v3.0 et que vous ne voyez pas ce champ, exécutez :  
+> ```bash
+> node -e "const db=require('better-sqlite3')('./data/admin.db'); db.prepare('ALTER TABLE calendar_events ADD COLUMN image TEXT DEFAULT NULL').run(); db.close();"
+> ```
 
 ---
 
@@ -183,3 +200,7 @@ graph LR
     Browser -->|HTTPS| ING
     Browser -->|HTTP :3000| APP
 ```
+
+---
+
+*Made with ❤️ by Bob — last updated Juillet 2026 (v3.0)*
