@@ -192,14 +192,34 @@ header {
     background: var(--light-gray);
 }
 
-/* News Grid */
+/* ── News carousel ─────────────────────────────────────────────────────── */
+.news-nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.news-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 1rem;
+}
+.news-scroll::-webkit-scrollbar { display: none; }
+
 .news-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    width: max-content;
 }
 
 .news-card {
+    flex: 0 0 300px;
+    width: 300px;
+    scroll-snap-align: start;
     background: var(--white);
     border-radius: 10px;
     overflow: hidden;
@@ -237,6 +257,24 @@ header {
     color: var(--gray);
     line-height: 1.6;
 }
+
+.news-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+.news-carousel-dots .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.18);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.news-carousel-dots .dot.active { background: var(--accent-color); }
 
 /* Club Section */
 .club-content {
@@ -312,24 +350,39 @@ header {
     font-size: 0.9rem;
 }
 
-/* Calendar */
+/* ── Calendar carousel ─────────────────────────────────────────────────── */
+.calendar-nav {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.calendar-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 1rem;
+}
+.calendar-scroll::-webkit-scrollbar { display: none; }
+
 .calendar-container {
-    background: var(--white);
-    padding: 2rem;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
+    width: max-content;
 }
 
 .calendar-event {
+    flex: 0 0 280px;
+    width: 280px;
+    scroll-snap-align: start;
     padding: 1.5rem;
-    margin-bottom: 1rem;
-    background: var(--light-gray);
+    background: var(--white);
     border-left: 4px solid var(--accent-color);
     border-radius: 5px;
-}
-
-.calendar-event:last-child {
-    margin-bottom: 0;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .event-date {
@@ -347,6 +400,24 @@ header {
 .event-description {
     color: var(--gray);
 }
+
+.calendar-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+.calendar-carousel-dots .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.18);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.calendar-carousel-dots .dot.active { background: var(--accent-color); }
 
 /* ── Pricing carousel ──────────────────────────────────────────────────── */
 

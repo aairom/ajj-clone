@@ -98,79 +98,132 @@ window.addEventListener('scroll', () => {
     });
 });
 
-// Load News from localStorage
+// Initialise a horizontal scroll carousel (shared by News and Calendar)
+function initCarousel(scrollId, gridSelector, dotsId, prevId, nextId, cardWidth, gap) {
+    var scroll  = document.getElementById(scrollId);
+    var prev    = document.getElementById(prevId);
+    var next    = document.getElementById(nextId);
+    var dotsEl  = document.getElementById(dotsId);
+    var cards   = document.querySelectorAll(gridSelector);
+
+    if (!scroll || !cards.length) return;
+
+    dotsEl.innerHTML = '';
+    cards.forEach(function (_, i) {
+        var d = document.createElement('button');
+        d.className = 'dot' + (i === 0 ? ' active' : '');
+        d.setAttribute('aria-label', 'Élément ' + (i + 1));
+        d.addEventListener('click', function () {
+            scroll.scrollTo({ left: i * (cardWidth + gap), behavior: 'smooth' });
+        });
+        dotsEl.appendChild(d);
+    });
+
+    function sync() {
+        var sl  = scroll.scrollLeft;
+        var idx = Math.round(sl / (cardWidth + gap));
+        Array.from(dotsEl.children).forEach(function (d, i) {
+            d.classList.toggle('active', i === idx);
+        });
+        prev.disabled = sl <= 2;
+        next.disabled = sl + scroll.offsetWidth >= scroll.scrollWidth - 2;
+    }
+
+    prev.addEventListener('click', function () {
+        scroll.scrollBy({ left: -(cardWidth + gap), behavior: 'smooth' });
+    });
+    next.addEventListener('click', function () {
+        scroll.scrollBy({ left:  (cardWidth + gap), behavior: 'smooth' });
+    });
+
+    scroll.addEventListener('scroll', sync, { passive: true });
+    sync();
+}
+
+// Load News from API
 function loadNews() {
     const newsContainer = document.getElementById('newsContainer');
     if (!newsContainer) return;
 
-    const news = JSON.parse(localStorage.getItem('news') || '[]');
+    fetch('/api/news')
+        .then(r => r.json())
+        .then(data => {
+            const news = data.success ? data.data : [];
 
-    if (news.length === 0) {
-        newsContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-newspaper"></i>
-                <p>Aucune actualité pour le moment.</p>
-            </div>
-        `;
-        return;
-    }
+            if (news.length === 0) {
+                newsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-newspaper"></i>
+                        <p>Aucune actualité pour le moment.</p>
+                    </div>
+                `;
+                return;
+            }
 
-    // Sort by date (newest first)
-    news.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    newsContainer.innerHTML = news.map(item => `
-        <div class="news-card">
-            <img src="${item.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EImage%3C/text%3E%3C/svg%3E'}" alt="${item.title}">
-            <div class="news-content">
-                <div class="news-date">${formatDate(item.date)}</div>
-                <h3>${item.title}</h3>
-                <p>${item.content}</p>
-            </div>
-        </div>
-    `).join('');
+            newsContainer.innerHTML = news.map(item => `
+                <div class="news-card">
+                    <img src="${item.image || 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22400%22 height=%22200%22/%3E%3Ctext fill=%22%23999%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22%3EImage%3C/text%3E%3C/svg%3E'}" alt="${item.title}">
+                    <div class="news-content">
+                        <div class="news-date">${formatDate(item.date)}</div>
+                        <h3>${item.title}</h3>
+                        <p>${item.content}</p>
+                    </div>
+                </div>
+            `).join('');
+            initCarousel('newsScroll', '#newsContainer .news-card', 'newsDots', 'newsPrev', 'newsNext', 300, 24);
+        })
+        .catch(() => {
+            newsContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-newspaper"></i>
+                    <p>Impossible de charger les actualités.</p>
+                </div>
+            `;
+        });
 }
 
-// Load Calendar Events from localStorage
+// Load Calendar Events from API
 function loadCalendar() {
     const calendarContainer = document.getElementById('calendarContainer');
     if (!calendarContainer) return;
 
-    const events = JSON.parse(localStorage.getItem('calendar') || '[]');
+    fetch('/api/calendar')
+        .then(r => r.json())
+        .then(data => {
+            const events = data.success ? data.data : [];
 
-    if (events.length === 0) {
-        calendarContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-calendar"></i>
-                <p>Aucun événement prévu pour le moment.</p>
-            </div>
-        `;
-        return;
-    }
+            // Filter future/today events — compare date strings only to avoid
+            // UTC-midnight vs local-time mismatch dropping today's events
+            const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+            const futureEvents = events.filter(event => event.date >= todayStr);
 
-    // Sort by date (nearest first)
-    events.sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (futureEvents.length === 0) {
+                calendarContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar"></i>
+                        <p>Aucun événement à venir.</p>
+                    </div>
+                `;
+                return;
+            }
 
-    // Filter future events
-    const now = new Date();
-    const futureEvents = events.filter(event => new Date(event.date) >= now);
-
-    if (futureEvents.length === 0) {
-        calendarContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-calendar"></i>
-                <p>Aucun événement à venir.</p>
-            </div>
-        `;
-        return;
-    }
-
-    calendarContainer.innerHTML = futureEvents.map(event => `
-        <div class="calendar-event">
-            <div class="event-date">${formatDate(event.date)}</div>
-            <div class="event-title">${event.title}</div>
-            <div class="event-description">${event.description}</div>
-        </div>
-    `).join('');
+            calendarContainer.innerHTML = futureEvents.map(event => `
+                <div class="calendar-event">
+                    <div class="event-date">${formatDate(event.date)}</div>
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-description">${event.description}</div>
+                </div>
+            `).join('');
+            initCarousel('calendarScroll', '#calendarContainer .calendar-event', 'calendarDots', 'calendarPrev', 'calendarNext', 280, 24);
+        })
+        .catch(() => {
+            calendarContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-calendar"></i>
+                    <p>Impossible de charger le calendrier.</p>
+                </div>
+            `;
+        });
 }
 
 // Format Date
@@ -223,52 +276,8 @@ if (contactForm) {
     });
 }
 
-// Initialize default data if none exists
-function initializeDefaultData() {
-    // Initialize news if empty
-    if (!localStorage.getItem('news')) {
-        const defaultNews = [
-            {
-                id: 1,
-                title: 'Bienvenue sur notre nouveau site',
-                content: 'Découvrez notre nouveau site web avec toutes les informations sur le club.',
-                date: new Date().toISOString().split('T')[0],
-                image: ''
-            },
-            {
-                id: 2,
-                title: 'Reprise des cours',
-                content: 'Les cours reprennent selon les horaires habituels. Venez nombreux !',
-                date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
-                image: ''
-            }
-        ];
-        localStorage.setItem('news', JSON.stringify(defaultNews));
-    }
-
-    // Initialize calendar if empty
-    if (!localStorage.getItem('calendar')) {
-        const defaultEvents = [
-            {
-                id: 1,
-                title: 'Stage de perfectionnement',
-                description: 'Stage ouvert à tous les niveaux avec un instructeur invité.',
-                date: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
-            },
-            {
-                id: 2,
-                title: 'Compétition régionale',
-                description: 'Compétition ouverte aux ceintures bleues et plus.',
-                date: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
-            }
-        ];
-        localStorage.setItem('calendar', JSON.stringify(defaultEvents));
-    }
-}
-
 // Load content on page load
 document.addEventListener('DOMContentLoaded', () => {
-    initializeDefaultData();
     loadNews();
     loadCalendar();
 });

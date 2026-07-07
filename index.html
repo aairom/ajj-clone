@@ -49,9 +49,16 @@
     <section id="actualites" class="section">
         <div class="container">
             <h2 class="section-title">Actualités</h2>
-            <div id="newsContainer" class="news-grid">
-                <!-- News items will be loaded dynamically -->
+            <div class="news-nav">
+                <button class="carousel-arrow" id="newsPrev" aria-label="Précédent">&#8249;</button>
+                <button class="carousel-arrow" id="newsNext" aria-label="Suivant">&#8250;</button>
             </div>
+            <div class="news-scroll" id="newsScroll">
+                <div id="newsContainer" class="news-grid">
+                    <!-- News items will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="news-carousel-dots" id="newsDots"></div>
         </div>
     </section>
 
@@ -111,9 +118,16 @@
     <section id="calendrier" class="section bg-light">
         <div class="container">
             <h2 class="section-title">Calendrier des Événements</h2>
-            <div id="calendarContainer" class="calendar-container">
-                <!-- Calendar events will be loaded dynamically -->
+            <div class="calendar-nav">
+                <button class="carousel-arrow" id="calendarPrev" aria-label="Précédent">&#8249;</button>
+                <button class="carousel-arrow" id="calendarNext" aria-label="Suivant">&#8250;</button>
             </div>
+            <div class="calendar-scroll" id="calendarScroll">
+                <div id="calendarContainer" class="calendar-container">
+                    <!-- Calendar events will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="calendar-carousel-dots" id="calendarDots"></div>
         </div>
     </section>
 
